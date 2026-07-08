@@ -9,7 +9,7 @@ import numpy as np
 
 # Define your directories
 input_dir = Path("./data")
-output_dir = Path("./data")
+output_dir = Path("./data_parquet")
 output_dir.mkdir(exist_ok=True)
 
 # Batch process every v7.3 .mat file
