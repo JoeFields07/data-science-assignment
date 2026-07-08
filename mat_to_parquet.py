@@ -1,3 +1,7 @@
+# Created 08/07/2026
+# Author: Joseph Fields
+# Description: One-time program to convert all .mat files in a folder to .parquet files to be read by Python
+
 from pathlib import Path
 import h5py
 import pandas as pd
