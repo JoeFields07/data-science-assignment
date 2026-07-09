@@ -8,24 +8,24 @@ import pickle
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 
 CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
-class DataAnalysis():
+class FileHandler():
     def __init__(self, filepath, verbose=True):
+
         self.verbose = verbose
         self.data_filepath = filepath
         FEATURE_FOLDER.mkdir(parents=True, exist_ok=True)       #make feature folder if it doesn't already exist
         
-        filename = Path(filepath).stem
+        filename = Path(filepath).stem                          #extract name of data file
         self.feature_filepath = Path(FEATURE_FOLDER) / (filename + ".pkl")
-        self.data = {}
+
+        self.data = {}                                          #initalise data dictionaries
         self.data_stats = {}
 
-        if self.feature_filepath.is_file():   #if feature data exists, don't calculate again
+        if self.feature_filepath.is_file():                     #if feature data exists, load and don't calculate again
             print("Feature file already exists") if self.verbose else 0
             self.load_feature_file()
         else:
@@ -37,34 +37,35 @@ class DataAnalysis():
 
     def dereference_data(self, file_handle, dataset):
         """Safely reads data, resolving HDF5 references uniformly as lists if they contain arrays."""
+
         raw_data = np.array(dataset).T
         
-        if raw_data.dtype == object and len(raw_data) > 0:
+        if raw_data.dtype == object and len(raw_data) > 0:      #check data is valid
             resolved_list = []
             for ref in raw_data.flatten():
                 if isinstance(ref, h5py.Reference):
                     ref_dataset = file_handle[ref]
                     actual_val = np.array(ref_dataset).T.flatten()
-                    
-                    # CRITICAL FIX: Always convert the array to a Python list.
-                    # This ensures every single row is a list, preventing "mix" errors.
-                    resolved_list.append(actual_val.tolist())
+                    resolved_list.append(actual_val.tolist())   #ensure every row is a list
+
                 else:
                     # If it's a null/empty reference, provide an empty list to keep types uniform
                     resolved_list.append([])
+
             return resolved_list
+        
         else:
             # For standard purely numeric/flat columns, return as a flat numpy array
-            return raw_data.flatten()       #i dont think this ever happens
+            return raw_data.flatten()       #I dont think this ever happens
 
     
     def load_data_file(self):
-        # Load the parquet file
+        """Loads the .mat file and returns a dictionary of the channels"""
+
         print(f"Loading sensor data from: {self.data_filepath}") if self.verbose else 0
         with h5py.File(self.data_filepath, 'r') as f:
             clean_data = {}
             
-            # Find the key that is NOT '#refs#'
             all_keys = list(f.keys())     
             data_group = f[all_keys[1]]   #second key contains the data
             
@@ -78,6 +79,8 @@ class DataAnalysis():
 
 
     def load_feature_file(self):
+        """Loads the .pkl file containing cached features"""
+
         print(f"Loading features from: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "rb") as f:
             self.data_stats = pickle.load(f)
@@ -85,24 +88,33 @@ class DataAnalysis():
     
 
     def export_features(self):
+        """Exports the features to a .pkl file cache"""
+
         print(f"Exporting features to: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "wb") as f:
-            pickle.dump(self.data_stats, f, indent=4)
+            pickle.dump(self.data_stats, f)
         pass
 
 
     def remove_data(self):
-        self.data = {}      #remove the raw data to save memory once features have been extracted
+        """Removes the raw data to save memory once features have been calculated"""
+
+        self.data = {}
         print("Removed raw data") if self.verbose else 0
         pass
 
     
     def extract_features(self):
-        #mean, standard deviation, root mean squared (RMS), kurtosis, skewness and peak-to-peak; 
-        #as well as those less commonly used: crest factor, shape factor, impulse factor, margin factor and energy, 
+        """
+        Extracts features from each channel, creating a two layer dictionary for each channel and feature
+        The following features are calculated:
+        mean, standard deviation, root mean squared (RMS), kurtosis, skewness, peak-to-peak, crest factor, 
+        shape factor, impulse factor, margin factor and energy,
+        """
+
         print("Starting feature extraction") if self.verbose else 0
         for channel_name in CHANNEL_KEYS:
-            channel = self.data[channel_name]
+            channel = self.data[channel_name]       #get data for the current channel
             self.data_stats[channel_name] = {}      #need to initialise a dict for each channel
             
             x_squared = np.square(channel)          #pre-calculate components to save time
@@ -114,7 +126,7 @@ class DataAnalysis():
             self.data_stats[channel_name]['RMS'] = np.sqrt(np.mean(x_squared, axis=1))
             self.data_stats[channel_name]['kurtosis'] = stats.kurtosis(channel, axis=1)
             self.data_stats[channel_name]['skewness'] = stats.skew(channel, axis=1)
-            self.data_stats[channel_name]['p2p'] = np.ptp(channel, axis=1)  # Shortcut for np.max(x) - np.min(x)
+            self.data_stats[channel_name]['p2p'] = np.ptp(channel, axis=1)
             #timeseries
             
             self.data_stats[channel_name]['crest_factor'] = np.divide(x_max, self.data_stats[channel_name]['RMS'])
@@ -125,9 +137,7 @@ class DataAnalysis():
 
             print(f"Channel {channel_name} features extracted") if self.verbose else 0
             #also spectral kurtosis using STFT - tough to tune
-            #could get direction and angle like in Sandvik for vibration? better for force really.
 
-            #need to then normalise (x - mean)/std    - gives mean zero and std 1
         self.remove_data()          #remove raw data now features have been extracted
         self.export_features()      #save newly extracted features
         pass 
@@ -165,7 +175,8 @@ class DataAnalysis():
 
 
 if __name__ == "__main__":
-    analysis = DataAnalysis('./data/Segmented_Linear_Baseline.mat')
-    
-    #analysis.plot_all_features(1)
-    plt.show()
+    #file = FileHandler('./data/Segmented_Linear_Baseline.mat')
+    file = FileHandler('./data/Segmented_Linear_Heavy.mat')
+
+    #file.plot_all_features(1)
+    #plt.show()
