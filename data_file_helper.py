@@ -14,7 +14,7 @@ MACHINING_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleX
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
 
-class FileHandler():
+class FileHelper():
     def __init__(self, filepath, verbose=True):
 
         self.verbose = verbose
@@ -39,7 +39,6 @@ class FileHandler():
             print("Feature file does not exist") if self.verbose else 0
             self.data = self.load_data_file()
             self.extract_features()
-        pass
 
 
     def dereference_data(self, file_handle, dataset):
@@ -91,7 +90,6 @@ class FileHandler():
         print(f"Loading features from: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "rb") as f:
             self.data_stats = pickle.load(f)
-        return 
     
 
     def export_features(self):
@@ -100,7 +98,6 @@ class FileHandler():
         print(f"Exporting features to: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "wb") as f:
             pickle.dump(self.data_stats, f)
-        pass
 
 
     def remove_data(self):
@@ -108,7 +105,6 @@ class FileHandler():
 
         self.data = {}
         print("Removed raw data") if self.verbose else 0
-        pass
 
     
     def extract_features(self):
@@ -155,7 +151,6 @@ class FileHandler():
 
         self.remove_data()          #remove raw data now features have been extracted
         self.export_features()      #save newly extracted features
-        pass 
 
 
     def plot_channel_feature(self, figure_num, rows, cols, idx, channel_name, feature_name):
@@ -169,7 +164,6 @@ class FileHandler():
         plt.ylabel(feature_name)
         #plt.title(channel_name)
         plt.grid('show')
-        pass
 
 
     def plot_all_channel_features(self, figure_num, channel_name):
@@ -178,7 +172,6 @@ class FileHandler():
             self.plot_channel_feature(figure_num, 3, 4, c, channel_name, feature)
             c +=1
         plt.suptitle(channel_name)
-        pass
 
 
     def plot_all_features(self, start_figure_num):
@@ -186,12 +179,11 @@ class FileHandler():
         for channel_name in self.channel_keys:
             self.plot_all_channel_features(c, channel_name)
             c +=1
-        pass
 
 
 if __name__ == "__main__":
-    #file = FileHandler('./data/Segmented_Linear_Baseline.mat')
-    file = FileHandler('./data/Segmented_Linear_Override.mat')
+    #file = FileHelper('./data/Segmented_Linear_Baseline.mat')
+    file = FileHelper('./data/Segmented_Linear_Override.mat')
 
     #file.plot_all_features(1)
     #plt.show()

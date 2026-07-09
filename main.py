@@ -1,5 +1,5 @@
-
-from data_file_handler import FileHandler
+from data_file_helper import FileHelper
+from analysis_helper import AnalysisHelper
 import argparse
 
 
@@ -17,18 +17,10 @@ def main():
     # 3. Parse the arguments from the terminal
     args = parser.parse_args()
     
-    #machining_baseline = FileHandler('./data/Segmented_Machining_Baseline.mat')
-    #machining_misalign = FileHandler('./data/Segmented_Machining_Misalignment.mat')
-    #machining_cracks = FileHandler('./data/Segmented_Machining_SurfaceCracks.mat')
-    #machining_wear = FileHandler('./data/Segmented_Machining_ToolWear.mat')
-    t = FileHandler('./data/Segmented_Spindle5000_Baseline.mat')
-    t = FileHandler('./data/Segmented_Spindle5000_Heavy.mat')
-    t = FileHandler('./data/Segmented_Spindle5000_Override.mat')
-    t = FileHandler('./data/Segmented_Spindle5000_Unbalanced.mat')
-    t = FileHandler('./data/Segmented_Spindle12000_Baseline.mat')
-    t = FileHandler('./data/Segmented_Spindle12000_Heavy.mat')
-    t = FileHandler('./data/Segmented_Spindle12000_Override.mat')
-    t = FileHandler('./data/Segmented_Spindle12000_Unbalanced.mat')
+    machining_baseline = FileHelper('./data/Segmented_Machining_Baseline.mat')
+    machining_misalign = FileHelper('./data/Segmented_Machining_Misalignment.mat')
+    machining_cracks = FileHelper('./data/Segmented_Machining_SurfaceCracks.mat')
+    machining_wear = FileHelper('./data/Segmented_Machining_ToolWear.mat')
 
     #need to combine the features and turn them into some kind of labelled dataset
 
@@ -38,7 +30,6 @@ def main():
 
     #plot results
 
-    print('test')
 
 
 if __name__ =="__main__":
