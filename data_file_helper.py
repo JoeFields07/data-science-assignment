@@ -10,7 +10,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 
 ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
-MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleX", "SpindleY", "SpindleZ", "Power"]
+MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleLoad", "SpindleX", "SpindleY", "SpindleZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
 
@@ -137,8 +137,8 @@ class FileHelper():
             self.data_stats[channel_name]['mean'] = means
             self.data_stats[channel_name]['std'] = stds
             self.data_stats[channel_name]['RMS'] = rms_vals
-            self.data_stats[channel_name]['kurtosis'] = kurtosis
-            self.data_stats[channel_name]['skewness'] = skewness
+            self.data_stats[channel_name]['kurtosis'] = np.nan_to_num(kurtosis, nan=0.0)        #sometimes these can be NaN due to python precision loss
+            self.data_stats[channel_name]['skewness'] = np.nan_to_num(skewness, nan=0.0)
             self.data_stats[channel_name]['p2p'] = p2p
             self.data_stats[channel_name]['energy'] = energy
             self.data_stats[channel_name]['crest_factor']   = np.divide(x_max, rms_vals)
@@ -182,8 +182,19 @@ class FileHelper():
 
 
 if __name__ == "__main__":
-    #file = FileHelper('./data/Segmented_Linear_Baseline.mat')
-    file = FileHelper('./data/Segmented_Linear_Override.mat')
+    file = FileHelper('./data/Segmented_Linear_Baseline.mat')
+    #file = FileHelper('./data/Segmented_Linear_Override.mat')
+    #file = FileHelper('./data/Segmented_Linear_Heavy.mat')
 
-    #file.plot_all_features(1)
-    #plt.show()
+    #file = FileHelper('./data/Segmented_Spindle5000_Baseline.mat')
+    #file = FileHelper('./data/Segmented_Spindle5000_Override.mat')
+    #file = FileHelper('./data/Segmented_Spindle5000_Heavy.mat')
+    #file = FileHelper('./data/Segmented_Spindle5000_Unbalanced.mat')
+
+    #file = FileHelper('./data/Segmented_Spindle12000_Baseline.mat')
+    #file = FileHelper('./data/Segmented_Spindle12000_Override.mat')
+    #file = FileHelper('./data/Segmented_Spindle12000_Heavy.mat')
+    #file = FileHelper('./data/Segmented_Spindle12000_Unbalanced.mat')
+
+    file.plot_all_features(1)
+    plt.show()

@@ -19,35 +19,32 @@ class AnalysisHelper():
         self.pca = PCA(n_components=3)
 
 
-    def import_feature_data(self, data_list, labels, channel_keys, feature_keys): 
+    def import_feature_data(self, data_list, channel_keys, feature_keys): 
         """
         Combine multiple dictionaries from the helper to make a ML friendly matrix, also generate classification labels. 
         """
         print(f"Combining {len(data_list)} datasets") if self.verbose else 0
-        if len(labels) == len(data_list):
-            self.full_keys = [f"{ch}_{feat}" for ch in channel_keys for feat in feature_keys]   #create names by combining both keys
-            column_collector = {name: [] for name in self.full_keys}        #make collector
-            labels_list = []
+        self.full_keys = [f"{ch}_{feat}" for ch in channel_keys for feat in feature_keys]   #create names by combining both keys
+        column_collector = {name: [] for name in self.full_keys}        #make collector
+        labels_list = []
 
-            for d_idx, data in enumerate(data_list, start=0):
-                # Pick the first available channel and feature to get length
-                num_samples = len(data[channel_keys[0]][feature_keys[0]]) 
+        for d_idx, data in enumerate(data_list, start=0):
+            # Pick the first available channel and feature to get length
+            num_samples = len(data[channel_keys[0]][feature_keys[0]]) 
+            # Generate and store the labels for this dataset
+            labels_list.append(np.repeat(d_idx, num_samples))
+            # Gather the actual features
+            for ch in channel_keys:
+                for feat in feature_keys:
+                    key_name = f"{ch}_{feat}"
+                    column_collector[key_name].append(data[ch][feat])
+                
+        # Compile the final X Matrix (Concatenate chunks first, then stack side-by-side)
+        self.ml_matrix_X = np.column_stack([np.concatenate(column_collector[k]) for k in self.full_keys])
+        self.ml_matrix_y = np.concatenate(labels_list)
 
-                # Generate and store the labels for this dataset
-                labels_list.append(np.repeat(labels[d_idx], num_samples))
+        print(f"X matrix of shape {np.shape(self.ml_matrix_X)} created") if self.verbose else 0
 
-                # Gather the actual features
-                for ch in channel_keys:
-                    for feat in feature_keys:
-                        key_name = f"{ch}_{feat}"
-                        column_collector[key_name].append(d[ch][feat])
-                    
-            # Compile the final X Matrix (Concatenate chunks first, then stack side-by-side)
-            self.ml_matrix_X = np.column_stack([np.concatenate(column_collector[k]) for k in self.full_keys])
-            self.ml_matrix_y = np.concatenate(labels_list)
-            print(f"X matrix of shape {np.shape(self.ml_matrix_X)} created") if self.verbose else 0
-        else:
-            print("Error: number of labels and data are not equal")
 
     def preprocess_data(self, test_size=0.2, random_state=42):
         """
@@ -68,39 +65,43 @@ class AnalysisHelper():
 
 
     def train_PCA(self):
+        """
+        Obtains the PCA transform using the X_train dataset
+        """
         self.X_train_PCA = self.pca.fit_transform(self.X_train)     #train and apply PCA
         print(f"Trained and applied PCA to X_train") if self.verbose else 0
         pass
     
 
     def apply_PCA(self):
+        """
+        Applies the PCA transform to the X_test dataset
+        """
         self.X_test_PCA = self.pca.transform(self.X_test)           #only apply PCA
         print(f"Applied PCA to X_test using existing parameters") if self.verbose else 0
 
 
-    def plot_PCA(self, fig_num):
+    def plot_PCA(self, fig_num, legend_labels):
         x = self.X_train_PCA[:, 0]
         y = self.X_train_PCA[:, 1]
         z = self.X_train_PCA[:, 2]
-        self.plot_data(fig_num, x, y, z, "PCA1", "PCA2", "PCA3")
+        self.plot_data(fig_num, x, y, z, "PCA1", "PCA2", "PCA3", legend_labels)
 
 
-    def plot_feature(self, fig_num, name_x, name_y, name_z):
+    def plot_feature(self, fig_num, name_x, name_y, name_z, legend_labels):
         x_idx = self.full_keys.index(name_x)
         y_idx = self.full_keys.index(name_y)
         z_idx = self.full_keys.index(name_z)
         x = self.X_train[:, x_idx]
         y = self.X_train[:, y_idx]
         z = self.X_train[:, z_idx]
-        self.plot_data(fig_num, x, y, z, name_x, name_y, name_z)
+        self.plot_data(fig_num, x, y, z, name_x, name_y, name_z, legend_labels)
 
 
-    def plot_data(self, fig_num, x, y, z, x_label, y_label, z_label):
+    def plot_data(self, fig_num, x, y, z, x_label, y_label, z_label, legend_labels):
         # Set up the 3D plotting environment
         fig = plt.figure(fig_num, figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
-
-
         # Create the scatter plot using 'y_train' for the color mapping (c)
         # 'cmap' defines the color palette, 'edgecolor' makes points crisp
         scatter = ax.scatter(
@@ -119,7 +120,10 @@ class AnalysisHelper():
         #ax.set_title('')
 
         # Create a nice legend showing which color represents which dataset label (1, 2, or 3)
-        legend1 = ax.legend(*scatter.legend_elements(), title="Datasets")
-        ax.add_artist(legend1)
+        handles, _ = scatter.legend_elements()
+        ax.legend(handles=handles,
+                labels=legend_labels, 
+                title="Datasets")
+        
         plt.show(block = False)
 

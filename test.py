@@ -1,8 +1,8 @@
 import h5py
 
-#mat_file_path = './data/Segmented_Machining_Baseline.mat'
-mat_file_path = './data/Segmented_Linear_Baseline.mat'
-mat_file_path = './data/Segmented_Spindle5000_Baseline.mat'
+mat_file_path = './data/Segmented_Machining_Baseline.mat'
+#mat_file_path = './data/Segmented_Linear_Baseline.mat'
+#mat_file_path = './data/Segmented_Spindle5000_Baseline.mat'
 
 with h5py.File(mat_file_path, 'r') as f:
     data_keys = list(f.keys())
