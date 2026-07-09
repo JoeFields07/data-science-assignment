@@ -10,7 +10,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 
 ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
-MACHINING_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleX", "SpindleY", "SpindleZ", "Power"]
+MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleX", "SpindleY", "SpindleZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
 
@@ -28,7 +28,7 @@ class FileHelper():
         self.data_stats = {}
 
         if "Machining" in filename:                             #the Machining files have different keys
-            self.channel_keys = MACHINING_CHANNEL_KEYS
+            self.channel_keys = MACH_CHANNEL_KEYS
         else:
             self.channel_keys = ALL_CHANNEL_KEYS
 
