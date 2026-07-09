@@ -9,9 +9,11 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 
-CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
+ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
+MACHINING_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleX", "SpindleY", "SpindleZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
+
 class FileHandler():
     def __init__(self, filepath, verbose=True):
 
@@ -24,6 +26,11 @@ class FileHandler():
 
         self.data = {}                                          #initalise data dictionaries
         self.data_stats = {}
+
+        if "Machining" in filename:                             #the Machining files have different keys
+            self.channel_keys = MACHINING_CHANNEL_KEYS
+        else:
+            self.channel_keys = ALL_CHANNEL_KEYS
 
         if self.feature_filepath.is_file():                     #if feature data exists, load and don't calculate again
             print("Feature file already exists") if self.verbose else 0
@@ -69,7 +76,7 @@ class FileHandler():
             all_keys = list(f.keys())     
             data_group = f[all_keys[1]]   #second key contains the data
             
-            for channel_key in data_group.keys():     #could replace with CHANNEL_KEYS
+            for channel_key in self.channel_keys:       #some datasets have different labels
                 channel_data = data_group[channel_key]
                 
                 if isinstance(channel_data, h5py.Dataset):  #could remove
@@ -113,7 +120,7 @@ class FileHandler():
         """
 
         print("Starting feature extraction") if self.verbose else 0
-        for channel_name in CHANNEL_KEYS:
+        for channel_name in self.channel_keys:
             channel = self.data[channel_name]       #get data for the current channel
             self.data_stats[channel_name] = {}      #need to initialise a dict for each channel
             
@@ -168,7 +175,7 @@ class FileHandler():
 
     def plot_all_features(self, start_figure_num):
         c = start_figure_num
-        for channel_name in CHANNEL_KEYS:
+        for channel_name in self.channel_keys:
             self.plot_all_channel_features(c, channel_name)
             c +=1
         pass
@@ -176,7 +183,7 @@ class FileHandler():
 
 if __name__ == "__main__":
     #file = FileHandler('./data/Segmented_Linear_Baseline.mat')
-    file = FileHandler('./data/Segmented_Linear_Heavy.mat')
+    file = FileHandler('./data/Segmented_Linear_Override.mat')
 
     #file.plot_all_features(1)
     #plt.show()
