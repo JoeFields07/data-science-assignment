@@ -3,7 +3,7 @@ from analysis_helper import AnalysisHelper
 import argparse
 
 #TODO
-#some spikes can be seen int the data, could do some kind of standard deviations removal process. 
+#add a simple classifier?
 def main():
     parser = argparse.ArgumentParser(description="Process a specific data file.")
     
