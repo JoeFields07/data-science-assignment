@@ -124,23 +124,31 @@ class FileHandler():
             channel = self.data[channel_name]       #get data for the current channel
             self.data_stats[channel_name] = {}      #need to initialise a dict for each channel
             
-            x_squared = np.square(channel)          #pre-calculate components to save time
-            x_max = np.max(channel, axis=1)
-            x_mean_abs = np.mean(np.abs(channel), axis=1)
+            #Process metrics row-by-row using list comprehensions to handle unequal lengths
+            means       = np.array([np.mean(row) for row in channel])
+            stds        = np.array([np.std(row) for row in channel])
+            x_max       = np.array([np.max(row) for row in channel])
+            x_mean_abs  = np.array([np.mean(np.abs(row)) for row in channel])
 
-            self.data_stats[channel_name]['mean'] = np.mean(channel, axis=1)
-            self.data_stats[channel_name]['std'] = np.std(channel, axis=1)
-            self.data_stats[channel_name]['RMS'] = np.sqrt(np.mean(x_squared, axis=1))
-            self.data_stats[channel_name]['kurtosis'] = stats.kurtosis(channel, axis=1)
-            self.data_stats[channel_name]['skewness'] = stats.skew(channel, axis=1)
-            self.data_stats[channel_name]['p2p'] = np.ptp(channel, axis=1)
-            #timeseries
-            
-            self.data_stats[channel_name]['crest_factor'] = np.divide(x_max, self.data_stats[channel_name]['RMS'])
-            self.data_stats[channel_name]['shape_factor'] = np.divide(self.data_stats[channel_name]['RMS'], x_mean_abs)
+            #Pre-calculate row-by-row components
+            rms_vals    = np.array([np.sqrt(np.mean(np.square(row))) for row in channel])
+            kurtosis    = np.array([stats.kurtosis(row) for row in channel])
+            skewness    = np.array([stats.skew(row) for row in channel])
+            p2p         = np.array([np.ptp(row) for row in channel])
+            energy      = np.array([np.mean(np.square(row)) for row in channel])
+
+            #Store the calculated 1D arrays into dictionary
+            self.data_stats[channel_name]['mean'] = means
+            self.data_stats[channel_name]['std'] = stds
+            self.data_stats[channel_name]['RMS'] = rms_vals
+            self.data_stats[channel_name]['kurtosis'] = kurtosis
+            self.data_stats[channel_name]['skewness'] = skewness
+            self.data_stats[channel_name]['p2p'] = p2p
+            self.data_stats[channel_name]['energy'] = energy
+            self.data_stats[channel_name]['crest_factor']   = np.divide(x_max, rms_vals)
+            self.data_stats[channel_name]['shape_factor']   = np.divide(rms_vals, x_mean_abs)
             self.data_stats[channel_name]['impulse_factor'] = np.divide(x_max, x_mean_abs)
-            self.data_stats[channel_name]['margin_factor'] = np.divide(x_max, np.square(x_mean_abs))
-            self.data_stats[channel_name]['energy'] = np.mean(x_squared, axis=1)
+            self.data_stats[channel_name]['margin_factor']  = np.divide(x_max, np.square(x_mean_abs))
 
             print(f"Channel {channel_name} features extracted") if self.verbose else 0
             #also spectral kurtosis using STFT - tough to tune
