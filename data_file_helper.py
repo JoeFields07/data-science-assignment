@@ -151,7 +151,7 @@ class FileHelper():
 
         self.remove_data()          #remove raw data now features have been extracted
         self.export_features()      #save newly extracted features
-
+    
 
     def plot_channel_feature(self, figure_num, rows, cols, idx, channel_name, feature_name):
         data = self.data_stats[channel_name][feature_name]

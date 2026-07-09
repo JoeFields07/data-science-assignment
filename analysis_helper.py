@@ -46,11 +46,36 @@ class AnalysisHelper():
         print(f"X matrix of shape {np.shape(self.ml_matrix_X)} created") if self.verbose else 0
 
 
+    def remove_outliers(self):
+        # 1. Calculate the mean and standard deviation for each column
+        mean = np.mean(self.ml_matrix_X, axis=0)
+        std = np.std(self.ml_matrix_X, axis=0)
+        
+        # Avoid division by zero if a feature has zero variance
+        std[std == 0] = 1.0
+
+        # 2. Calculate the absolute Z-scores for every cell
+        # Formula: |(x - mean) / std|
+        z_scores = np.abs((self.ml_matrix_X - mean) / std)
+
+        # 3. Create a boolean mask of rows to KEEP
+        keep_mask = np.all(z_scores < 3, axis=1)
+
+        # 4. Filter both X and y simultaneously
+        original_shape = self.ml_matrix_X.shape[0]
+        self.ml_matrix_X = self.ml_matrix_X[keep_mask]
+        self.ml_matrix_y = self.ml_matrix_y[keep_mask]
+        
+        removed_count = original_shape - self.ml_matrix_X.shape[0]
+        print(f"{removed_count} outliers removed") if self.verbose else 0
+
+
     def preprocess_data(self, test_size=0.2, random_state=42):
         """
         Splits the ML matrix and labels into training and testing sets.
         Default is an 80/20 split. Scales the data so mean is zero and std is one. 
         """
+        
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
         self.ml_matrix_X, 
         self.ml_matrix_y, 
