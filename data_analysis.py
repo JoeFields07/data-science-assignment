@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
@@ -17,8 +19,8 @@ class DataAnalysis():
         self.verbose = verbose
         self.data = self.load_file(filename)
         self.data_stats = {}
-        
         pass
+
 
     def dereference_data(self, file_handle, dataset):
         """Safely reads data, resolving HDF5 references uniformly as lists if they contain arrays."""
@@ -42,7 +44,6 @@ class DataAnalysis():
             # For standard purely numeric/flat columns, return as a flat numpy array
             return raw_data.flatten()       #i dont think this ever happens
 
-
     
     def load_file(self, filename):
         # Load the parquet file
@@ -51,18 +52,22 @@ class DataAnalysis():
             clean_data = {}
             
             # Find the key that is NOT '#refs#'
-            all_keys = list(f.keys()) 
-            group_key = all_keys[1]     #second key contains the data
-
-            struct_group = f[group_key]
+            all_keys = list(f.keys())     
+            data_group = f[all_keys[1]]   #second key contains the data
             
-            for channel_key in struct_group.keys():     #could replace with CHANNEL_KEYS
-                channel_data = struct_group[channel_key]
+            for channel_key in data_group.keys():     #could replace with CHANNEL_KEYS
+                channel_data = data_group[channel_key]
                 
                 if isinstance(channel_data, h5py.Dataset):  #could remove
                     clean_data[channel_key] = self.dereference_data(f, channel_data)
         print("Data imported successfully") if self.verbose else 0
         return clean_data
+
+
+    def remove_data(self):
+        self.data = {}      #remove the raw data to save memory once features have been extracted
+        print("Removed raw data") if self.verbose else 0
+        pass
 
 
     def extract_features(self):
@@ -96,6 +101,7 @@ class DataAnalysis():
             #could get direction and angle like in Sandvik for vibration? better for force really.
 
             #need to then normalise (x - mean)/std    - gives mean zero and std 1
+        self.remove_data()      #remove raw data now features have been extracted
         pass 
 
 
@@ -112,6 +118,7 @@ class DataAnalysis():
         plt.grid('show')
         pass
 
+
     def plot_all_channel_features(self, figure_num, channel_name):
         c = 1
         for feature in FEATURE_KEYS:
@@ -120,15 +127,17 @@ class DataAnalysis():
         plt.suptitle(channel_name)
         pass
 
+
     def plot_all_features(self, start_figure_num):
         c = start_figure_num
-        for channel in CHANNEL_KEYS:
-            self.plot_all_channel_features(c)
+        for channel_name in CHANNEL_KEYS:
+            self.plot_all_channel_features(c, channel_name)
         pass
+
 
 if __name__ == "__main__":
     analysis = DataAnalysis('./data/Segmented_Linear_Baseline.mat')
     analysis.extract_features()
     
-    analysis.plot_all_features(1, "PlateLFAccX")
+    analysis.plot_all_features(1)
     plt.show()
