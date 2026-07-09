@@ -4,7 +4,7 @@
 
 from pathlib import Path
 import h5py
-import pandas as pd
+import pickle
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
@@ -13,12 +13,25 @@ from sklearn.decomposition import PCA
 
 CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
-
+FEATURE_FOLDER = Path("./data_features/")
 class DataAnalysis():
-    def __init__(self, filename, verbose=True):
+    def __init__(self, filepath, verbose=True):
         self.verbose = verbose
-        self.data = self.load_file(filename)
+        self.data_filepath = filepath
+        FEATURE_FOLDER.mkdir(parents=True, exist_ok=True)       #make feature folder if it doesn't already exist
+        
+        filename = Path(filepath).stem
+        self.feature_filepath = Path(FEATURE_FOLDER) / (filename + ".pkl")
+        self.data = {}
         self.data_stats = {}
+
+        if self.feature_filepath.is_file():   #if feature data exists, don't calculate again
+            print("Feature file already exists") if self.verbose else 0
+            self.load_feature_file()
+        else:
+            print("Feature file does not exist") if self.verbose else 0
+            self.data = self.load_data_file()
+            self.extract_features()
         pass
 
 
@@ -45,10 +58,10 @@ class DataAnalysis():
             return raw_data.flatten()       #i dont think this ever happens
 
     
-    def load_file(self, filename):
+    def load_data_file(self):
         # Load the parquet file
-        print(f"Loading {filename}") if self.verbose else 0
-        with h5py.File(filename, 'r') as f:
+        print(f"Loading sensor data from: {self.data_filepath}") if self.verbose else 0
+        with h5py.File(self.data_filepath, 'r') as f:
             clean_data = {}
             
             # Find the key that is NOT '#refs#'
@@ -64,12 +77,26 @@ class DataAnalysis():
         return clean_data
 
 
+    def load_feature_file(self):
+        print(f"Loading features from: {self.feature_filepath}") if self.verbose else 0
+        with open(self.feature_filepath, "rb") as f:
+            self.data_stats = pickle.load(f)
+        return 
+    
+
+    def export_features(self):
+        print(f"Exporting features to: {self.feature_filepath}") if self.verbose else 0
+        with open(self.feature_filepath, "wb") as f:
+            pickle.dump(self.data_stats, f, indent=4)
+        pass
+
+
     def remove_data(self):
         self.data = {}      #remove the raw data to save memory once features have been extracted
         print("Removed raw data") if self.verbose else 0
         pass
 
-
+    
     def extract_features(self):
         #mean, standard deviation, root mean squared (RMS), kurtosis, skewness and peak-to-peak; 
         #as well as those less commonly used: crest factor, shape factor, impulse factor, margin factor and energy, 
@@ -101,7 +128,8 @@ class DataAnalysis():
             #could get direction and angle like in Sandvik for vibration? better for force really.
 
             #need to then normalise (x - mean)/std    - gives mean zero and std 1
-        self.remove_data()      #remove raw data now features have been extracted
+        self.remove_data()          #remove raw data now features have been extracted
+        self.export_features()      #save newly extracted features
         pass 
 
 
@@ -132,12 +160,12 @@ class DataAnalysis():
         c = start_figure_num
         for channel_name in CHANNEL_KEYS:
             self.plot_all_channel_features(c, channel_name)
+            c +=1
         pass
 
 
 if __name__ == "__main__":
     analysis = DataAnalysis('./data/Segmented_Linear_Baseline.mat')
-    analysis.extract_features()
     
-    analysis.plot_all_features(1)
+    #analysis.plot_all_features(1)
     plt.show()
