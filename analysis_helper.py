@@ -46,7 +46,7 @@ class AnalysisHelper():
         print(f"X matrix of shape {np.shape(self.ml_matrix_X)} created") if self.verbose else 0
 
 
-    def remove_outliers(self):
+    def remove_outliers(self, std_limit):
         # 1. Calculate the mean and standard deviation for each column
         mean = np.mean(self.ml_matrix_X, axis=0)
         std = np.std(self.ml_matrix_X, axis=0)
@@ -59,7 +59,7 @@ class AnalysisHelper():
         z_scores = np.abs((self.ml_matrix_X - mean) / std)
 
         # 3. Create a boolean mask of rows to KEEP
-        keep_mask = np.all(z_scores < 3, axis=1)
+        keep_mask = np.all(z_scores < std_limit, axis=1)
 
         # 4. Filter both X and y simultaneously
         original_shape = self.ml_matrix_X.shape[0]
@@ -132,7 +132,7 @@ class AnalysisHelper():
         scatter = ax.scatter(
             x, y, z, 
             c=self.y_train, 
-            cmap='viridis', 
+            cmap='plasma', 
             s=30, 
             edgecolor='k', 
             alpha=0.8

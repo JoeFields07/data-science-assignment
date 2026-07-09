@@ -31,15 +31,15 @@ def main():
     #combine FileHelper dicts into ML friendly matrix
     analysis.import_feature_data(data_list, ALL_CHANNEL_KEYS, FEATURE_KEYS)
     
-    print(analysis.full_keys)
-    analysis.preprocess_data(0.2, 42)       #split and standardise
+    analysis.remove_outliers(4)
+    analysis.preprocess_data(0.01, 42)       #split and standardise
     
     analysis.train_PCA()                    #train PCA on X_train
     analysis.apply_PCA()                    #apply trained PCA to X_test
     #plot results
     #analysis.plot_PCA(1, ["Baseline", "Misalign", "Cracks", "Wear"])
     analysis.plot_PCA(1, ["Baseline", "Heavy", "Override"])
-
+    analysis.plot_feature(2, "SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean", ["Baseline", "Heavy", "Override"])
 
 if __name__ =="__main__":
     main()
