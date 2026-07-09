@@ -74,14 +74,21 @@ class DataAnalysis():
             self.data_stats[channel_name]['skewness'] = stats.skew(channel, axis=1)
             self.data_stats[channel_name]['p2p'] = np.ptp(channel, axis=1)  # Shortcut for np.max(x) - np.min(x)
             #timeseries
-            #crest factor, shape factor, impulse factor, margin factor and energy, which are defined in equation (1)–(5)
+            
+            self.data_stats[channel_name]['crest_factor'] = np.divide(np.max(channel, axis=1), self.data_stats[channel_name]['RMS'])
+            self.data_stats[channel_name]['shape_factor'] = np.divide(self.data_stats[channel_name]['RMS'], np.mean(np.abs(channel), axis=1))
+            self.data_stats[channel_name]['impulse_factor'] = np.divide(np.max(channel, axis=1), np.mean(np.abs(channel), axis=1))
+            self.data_stats[channel_name]['margin_factor'] = np.divide(np.max(channel, axis=1), np.square(np.mean(np.abs(channel), axis=1)))
+            self.data_stats[channel_name]['energy'] = np.mean(np.square(channel), axis=1)
+            
             #also spectral kurtosis using STFT - tough to tune
             #could get direction and angle like in Sandvik for vibration? better for force really.
 
+            #need to then normalise 
+            print('test')
         pass 
 
 if __name__ == "__main__":
     analysis = DataAnalysis('./data/Segmented_Linear_Baseline.mat')
     analysis.extract_features()
     print('test')
-    
