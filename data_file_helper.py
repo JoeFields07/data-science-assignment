@@ -114,6 +114,8 @@ class FileHelper():
         mean, standard deviation, root mean squared (RMS), kurtosis, skewness, peak-to-peak, crest factor, 
         shape factor, impulse factor, margin factor and energy,
         """
+        #Takes roughly 3 mins per mat file. Efficiency could be improved with np arrays instead of dictionaries 
+        #However only needs to be ran once and dicts are very human readable. 
 
         print("Starting feature extraction") if self.verbose else 0
         for channel_name in self.channel_keys:
