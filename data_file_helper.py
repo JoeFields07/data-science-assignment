@@ -13,6 +13,9 @@ ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", 
 MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleLoad", "SpindleX", "SpindleY", "SpindleZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
+DATA_FOLDER = Path("./data/")
+#TODO: FINISH THE DICT FOR PRESETS
+DATA_FILE_PRESETS = {'linear': ["Segmented_Linear_Baseline.mat", "Segmented_Linear_Heavy.mat", "Segmented_Linear_Override.mat"]}
 
 class FileHelper():
     def __init__(self, filepath, verbose=True):

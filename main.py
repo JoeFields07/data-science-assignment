@@ -1,22 +1,65 @@
-from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
+from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS, DATA_FOLDER, DATA_FILE_PRESETS
 from analysis_helper import AnalysisHelper
 import argparse
 
 #TODO
-#add a simple classifier?
+    #add a simple classifier?
+    #command line interface
+        #either a preset that loads linear, machining or spindles (separate and both)
+        #groups of filenames, throws a controlled error if the features use different keys
+
 def main():
     parser = argparse.ArgumentParser(description="Process a specific data file.")
     
     # 2. Define the argument you want to accept (e.g., --file or -f)
     parser.add_argument(
-        "-f", "--file", 
+        "-p", "--preset", 
         type=str, 
         required=False, 
-        help="The path of the .mat file for analysis"
+        help="Enter presets 'linear' 'machining' 'spindle5000' 'spindle12000' 'spindle'"
+    )
+
+    parser.add_argument(        #returns none if nothing entered
+        "-f", "--file", 
+        type=str,
+        nargs="+",
+        required=False, 
+        help="Enter the path/s of the .mat file for analysis"
+    )
+
+    parser.add_argument(
+        "-v", "--verbose", 
+        action="store_true",
+        help="Enable verbose logging"
     )
     
     # 3. Parse the arguments from the terminal
-    args = parser.parse_args()
+    args = parser.parse_args() 
+    preset_given = False
+
+    #add logic here
+    if args.preset:
+        if args.preset == 'linear':
+            pass        #make dict containing FileHelpers
+        elif args.preset == 'machining':
+            pass
+        elif args.preset == 'spindle5000':
+            pass
+        elif args.preset == 'spindle12000':
+            pass
+        elif args.preset == 'spindle':
+            pass
+        else:
+            print(f"Error: preset {args.preset} not valid")
+    else:
+
+        if args.file:
+            pass
+        else:
+           print("Error: No preset or file given") 
+
+
+
     analysis = AnalysisHelper()
 
     #m_baseline = FileHelper('./data/Segmented_Machining_Baseline.mat')
@@ -40,6 +83,8 @@ def main():
     #analysis.plot_PCA(1, ["Baseline", "Misalign", "Cracks", "Wear"])
     analysis.plot_PCA(1, ["Baseline", "Heavy", "Override"])
     analysis.plot_feature(2, "SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean", ["Baseline", "Heavy", "Override"])
+
+
 
 if __name__ =="__main__":
     main()
