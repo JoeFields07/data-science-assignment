@@ -1,12 +1,9 @@
-from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS, DATA_FOLDER
+from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
 from analysis_helper import AnalysisHelper
 import argparse
 
 #TODO
     #add a simple classifier?
-    #command line interface
-        #either a preset that loads linear, machining or spindles (separate and both)
-        #groups of filenames, throws a controlled error if the features use different keys
 
 def main():
     parser = argparse.ArgumentParser(description="Process a specific data file.")
@@ -42,24 +39,17 @@ def main():
     labels = []
     c = 0
 
-    #either all need to be Machining or none
-    
-
     for filename in args.file:
-        data_obj_list[c] = FileHelper(args.directory + filename)    #could avoid saving the data
-        stats_list[c] = data_obj_list[c].data_stats
-        labels[c] = data_obj_list[c].experiment + data_obj_list[c].variant
-        experiment_list[c] = data_obj_list[c].experiment
+        data_obj_list.append(FileHelper(args.directory + filename))    #could avoid saving the data
+        stats_list.append(data_obj_list[c].data_stats)
+        labels.append(data_obj_list[c].experiment + data_obj_list[c].variant)
+        experiment_list.append(data_obj_list[c].experiment)
         c+=1
 
     valid_file_combination = False
 
-    if any(experiment_list) == "Machining":     #if Machining is present, all files need to be Machining
-        if all(experiment_list) == "Machining":
-            valid_file_combination == True
-    
-    else:
-        valid_file_combination == True
+    #Valid if either "Machining" isn't in list OR if "Machining" is only thing in list
+    valid_file_combination = ("Machining" not in experiment_list) or (set(experiment_list) == {"Machining"})
 
     if valid_file_combination:
         channel_keys = data_obj_list[0].channel_keys
@@ -84,6 +74,9 @@ def main():
         
         analysis.plot_PCA(1, labels)            #plot results
         analysis.plot_feature(2, "SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean", labels)
+
+    else:
+        print("Error: Invalid combination of data files")
 
 
 

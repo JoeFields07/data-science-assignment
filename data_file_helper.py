@@ -31,7 +31,7 @@ class FileHelper():
         self.data = {}                                          #initalise data dictionaries
         self.data_stats = {}
 
-        if self.experiment_name == "Machining":                 #the Machining files have different keys
+        if self.experiment == "Machining":                 #the Machining files have different keys
             self.channel_keys = MACH_CHANNEL_KEYS
         else:
             self.channel_keys = ALL_CHANNEL_KEYS
