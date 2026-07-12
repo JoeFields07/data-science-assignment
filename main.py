@@ -1,3 +1,5 @@
+#python main.py -f Segmented_Linear_Baseline.mat Segmented_Linear_Heavy.mat Segmented_Linear_Override.mat Segmented_Spindle5000_Baseline.mat Segmented_Spindle5000_Heavy.mat Segmented_Spindle5000_Override.mat Segmented_Spindle5000_Unbalanced.mat -v
+
 from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
 from analysis_helper import AnalysisHelper
 import argparse
@@ -53,27 +55,20 @@ def main():
 
     if valid_file_combination:
         channel_keys = data_obj_list[0].channel_keys
-
-        #m_baseline = FileHelper('./data/Segmented_Machining_Baseline.mat')
-        #m_misalign = FileHelper('./data/Segmented_Machining_Misalignment.mat')
-        #m_cracks = FileHelper('./data/Segmented_Machining_SurfaceCracks.mat')
-        #m_wear = FileHelper('./data/Segmented_Machining_ToolWear.mat')
-        #l_base = FileHelper('./data/Segmented_Linear_Baseline.mat')
-        #l_heavy = FileHelper('./data/Segmented_Linear_Heavy.mat')
-        #l_ovr = FileHelper('./data/Segmented_Linear_Override.mat')
         
         analysis = AnalysisHelper()
         #combine FileHelper dicts into ML friendly matrix
-        analysis.import_feature_data(stats_list, channel_keys, FEATURE_KEYS)
+        analysis.import_feature_data(stats_list, channel_keys, FEATURE_KEYS, 6.0)
         
-        analysis.remove_outliers(4)
-        analysis.preprocess_data(0.01, 42)       #split and standardise
+        analysis.preprocess_data(0.2, 42)       #split and standardise
         
         analysis.train_PCA()                    #train PCA on X_train
         analysis.apply_PCA()                    #apply trained PCA to X_test
         
         analysis.plot_PCA(1, labels)            #plot results
         analysis.plot_feature(2, "SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean", labels)
+        analysis.train_classifier(classifier='RF', C=None, n_estimators=100, random_state=42)
+        analysis.predict_classifier(3, labels)
 
     else:
         print("Error: Invalid combination of data files")

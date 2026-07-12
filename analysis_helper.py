@@ -1,8 +1,12 @@
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
 
 class AnalysisHelper():
     def __init__(self, verbose=True):
@@ -17,57 +21,90 @@ class AnalysisHelper():
 
         self.scaler = StandardScaler()
         self.pca = PCA(n_components=3)
+        self.clf = None
 
 
-    def import_feature_data(self, data_list, channel_keys, feature_keys): 
+    def remove_outliers_aligned(self, X_chunk, y_chunk, threshold_limit):
         """
-        Combine multiple dictionaries from the helper to make a ML friendly matrix, also generate classification labels. 
+        Removes sensor spikes using Median Absolute Deviation (MAD).
+        Safely ignores and handles NaN values to prevent whole-matrix erasure.
+        """
+        # Replace any accidental raw NaNs with the column median so they don't break the math
+        if np.any(np.isnan(X_chunk)):
+            # Calculate medians ignoring existing NaNs
+            col_medians = np.nanmedian(X_chunk, axis=0)
+            # If an entire column was NaN, fallback to 0.0
+            col_medians[np.isnan(col_medians)] = 0.0
+
+            # Find where the NaNs are and fill them
+            inds = np.where(np.isnan(X_chunk))
+            X_chunk[inds] = np.take(col_medians, inds[1])
+
+        # Calculate robust median and MAD along axis 0
+        median = np.median(X_chunk, axis=0)
+        abs_deviation = np.abs(X_chunk - median)
+        mad = np.median(abs_deviation, axis=0)
+
+        # Handle flatlines (replace near-zeros with 1.0)
+        mad[mad < 1e-6] = 1.0
+
+        # Broadcast across the 2D matrix
+        mad_2d = mad[np.newaxis, :]  
+        robust_z_scores = 0.6745 * abs_deviation / mad_2d
+
+        # Check each feature independently
+        # If any cell is still NaN (highly unlikely now), treat it as False to be safe
+        keep_mask = np.all(np.nan_to_num(robust_z_scores, nan=np.inf) < threshold_limit, axis=1)
+
+        # 7. Apply mask
+        filtered_X = X_chunk[keep_mask]
+        filtered_y = y_chunk[keep_mask]
+
+        removed_count = X_chunk.shape[0] - filtered_X.shape[0]
+
+        return filtered_X, filtered_y, removed_count
+
+
+    def import_feature_data(self, data_list, channel_keys, feature_keys, threshold_limit=4.0): 
+        """
+        Combine multiple dictionaries from the helper into an ML matrix,
+        filtering outliers per feature while preserving strict row alignment.
         """
         print(f"Combining {len(data_list)} datasets") if self.verbose else 0
-        self.full_keys = [f"{ch}_{feat}" for ch in channel_keys for feat in feature_keys]   #create names by combining both keys
-        column_collector = {name: [] for name in self.full_keys}        #make collector
-        labels_list = []
+        self.full_keys = [f"{ch}_{feat}" for ch in channel_keys for feat in feature_keys]   
+
+        clean_X_chunks = []
+        clean_y_chunks = []
+        total_removed = 0
 
         for d_idx, data in enumerate(data_list, start=0):
-            # Pick the first available channel and feature to get length
-            num_samples = len(data[channel_keys[0]][feature_keys[0]]) 
-            # Generate and store the labels for this dataset
-            labels_list.append(np.repeat(d_idx, num_samples))
-            # Gather the actual features
+            # 1. Build a temporary matrix just for THIS dataset group to keep rows aligned
+            dataset_columns = []
             for ch in channel_keys:
                 for feat in feature_keys:
-                    key_name = f"{ch}_{feat}"
-                    column_collector[key_name].append(data[ch][feat])
-                
-        # Compile the final X Matrix (Concatenate chunks first, then stack side-by-side)
-        self.ml_matrix_X = np.column_stack([np.concatenate(column_collector[k]) for k in self.full_keys])
-        self.ml_matrix_y = np.concatenate(labels_list)
+                    dataset_columns.append(data[ch][feat])
 
-        print(f"X matrix of shape {np.shape(self.ml_matrix_X)} created") if self.verbose else 0
+            X_chunk = np.column_stack(dataset_columns)
+            y_chunk = np.repeat(d_idx, X_chunk.shape[0])
 
+            # 2. Pass the aligned chunk to the separate filtering function
+            filtered_X, filtered_y, removed = self.remove_outliers_aligned(X_chunk, y_chunk, threshold_limit)
+            #filtered_X, filtered_y, removed = X_chunk, y_chunk, std_limit
+            print("Error: entire dataset filtered out, increase threshold") if filtered_X.shape[0] == 0 else 0
 
-    def remove_outliers(self, std_limit):
-        # 1. Calculate the mean and standard deviation for each column
-        mean = np.mean(self.ml_matrix_X, axis=0)
-        std = np.std(self.ml_matrix_X, axis=0)
-        
-        # Avoid division by zero if a feature has zero variance
-        std[std == 0] = 1.0
+            total_removed += removed
 
-        # 2. Calculate the absolute Z-scores for every cell
-        # Formula: |(x - mean) / std|
-        z_scores = np.abs((self.ml_matrix_X - mean) / std)
+            # 3. Collect the clean chunks
+            clean_X_chunks.append(filtered_X)
+            clean_y_chunks.append(filtered_y)
 
-        # 3. Create a boolean mask of rows to KEEP
-        keep_mask = np.all(z_scores < std_limit, axis=1)
+        print(f"Total aligned rows removed as outliers: {total_removed}") if self.verbose else 0
 
-        # 4. Filter both X and y simultaneously
-        original_shape = self.ml_matrix_X.shape[0]
-        self.ml_matrix_X = self.ml_matrix_X[keep_mask]
-        self.ml_matrix_y = self.ml_matrix_y[keep_mask]
-        
-        removed_count = original_shape - self.ml_matrix_X.shape[0]
-        print(f"{removed_count} outliers removed") if self.verbose else 0
+        # 4. Combine all the clean dataset chunks into the final ML matrices
+        self.ml_matrix_X = np.concatenate(clean_X_chunks, axis=0)
+        self.ml_matrix_y = np.concatenate(clean_y_chunks, axis=0)
+
+        print(f"Final aligned X matrix of shape {np.shape(self.ml_matrix_X)} created") if self.verbose else 0
 
 
     def preprocess_data(self, test_size=0.2, random_state=42):
@@ -75,6 +112,8 @@ class AnalysisHelper():
         Splits the ML matrix and labels into training and testing sets.
         Default is an 80/20 split. Scales the data so mean is zero and std is one. 
         """
+        unique, counts = np.unique(self.ml_matrix_y, return_counts=True)
+        print("Class counts in full dataset:", dict(zip(unique, counts)))
         
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
         self.ml_matrix_X, 
@@ -107,11 +146,47 @@ class AnalysisHelper():
 
 
     def plot_PCA(self, fig_num, legend_labels):
+        """
+        Get PCA 1 2 and 3 and plot them.
+        
+        """
         x = self.X_train_PCA[:, 0]
         y = self.X_train_PCA[:, 1]
         z = self.X_train_PCA[:, 2]
         self.plot_data(fig_num, x, y, z, "PCA1", "PCA2", "PCA3", legend_labels)
 
+
+    def train_classifier(self, classifier='SVM', C=1.0, n_estimators=100, random_state=42):
+        """
+        Train a SVM or Random Forest classifier
+        """
+        if classifier == 'SVM':
+            self.clf = SVC(kernel='rbf', C=C, random_state=random_state)
+        elif classifier == 'RF':
+            self.clf = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state)
+        
+        self.clf.fit(self.X_train_PCA, self.y_train)
+
+
+    def predict_classifier(self, figure_num, labels):
+        """
+        Predict test data using classifier, plot confusion matrix
+        """
+        y_pred = self.clf.predict(self.X_test_PCA)
+        cm = confusion_matrix(self.y_test, y_pred)
+
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+
+        # Use num=figure_num to set the figure ID explicitly
+        fig, ax = plt.subplots(num=figure_num, figsize=(10, 8)) 
+        
+        disp.plot(cmap=plt.cm.Blues, ax=ax, colorbar=False)
+        plt.title("SVM Confusion Matrix")
+        ax.set_xticklabels(labels, rotation=30, ha='right') #rotate labels by 90deg to fit
+        plt.tight_layout()
+        plt.show(block = False)
+        return y_pred
+    
 
     def plot_feature(self, fig_num, name_x, name_y, name_z, legend_labels):
         x_idx = self.full_keys.index(name_x)

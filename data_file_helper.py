@@ -192,18 +192,18 @@ class FileHelper():
 
 
 if __name__ == "__main__":
-    file = FileHelper('./data/Segmented_Linear_Baseline.mat')
+    #file = FileHelper('./data/Segmented_Linear_Baseline.mat')
     #file = FileHelper('./data/Segmented_Linear_Override.mat')
     #file = FileHelper('./data/Segmented_Linear_Heavy.mat')
 
     #file = FileHelper('./data/Segmented_Spindle5000_Baseline.mat')
-    #file = FileHelper('./data/Segmented_Spindle5000_Override.mat')
     #file = FileHelper('./data/Segmented_Spindle5000_Heavy.mat')
+    file = FileHelper('./data/Segmented_Spindle5000_Override.mat')
     #file = FileHelper('./data/Segmented_Spindle5000_Unbalanced.mat')
 
     #file = FileHelper('./data/Segmented_Spindle12000_Baseline.mat')
-    #file = FileHelper('./data/Segmented_Spindle12000_Override.mat')
     #file = FileHelper('./data/Segmented_Spindle12000_Heavy.mat')
+    #file = FileHelper('./data/Segmented_Spindle12000_Override.mat')
     #file = FileHelper('./data/Segmented_Spindle12000_Unbalanced.mat')
 
     file.plot_all_features(1)
