@@ -13,9 +13,6 @@ ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", 
 MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleLoad", "SpindleX", "SpindleY", "SpindleZ", "Power"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
-DATA_FOLDER = Path("./data/")
-#TODO: FINISH THE DICT FOR PRESETS
-DATA_FILE_PRESETS = {'linear': ["Segmented_Linear_Baseline.mat", "Segmented_Linear_Heavy.mat", "Segmented_Linear_Override.mat"]}
 
 class FileHelper():
     def __init__(self, filepath, verbose=True):
@@ -25,12 +22,16 @@ class FileHelper():
         FEATURE_FOLDER.mkdir(parents=True, exist_ok=True)       #make feature folder if it doesn't already exist
         
         filename = Path(filepath).stem                          #extract name of data file
+        split_filename = filename.split('_')
+        self.experiment = split_filename[1]                
+        self.variant = split_filename[2]
+
         self.feature_filepath = Path(FEATURE_FOLDER) / (filename + ".pkl")
 
         self.data = {}                                          #initalise data dictionaries
         self.data_stats = {}
 
-        if "Machining" in filename:                             #the Machining files have different keys
+        if self.experiment_name == "Machining":                 #the Machining files have different keys
             self.channel_keys = MACH_CHANNEL_KEYS
         else:
             self.channel_keys = ALL_CHANNEL_KEYS
@@ -39,9 +40,13 @@ class FileHelper():
             print("Feature file already exists") if self.verbose else 0
             self.load_feature_file()
         else:
-            print("Feature file does not exist") if self.verbose else 0
-            self.data = self.load_data_file()
-            self.extract_features()
+            if self.data_filepath.is_file():
+                print("Feature file does not exist") if self.verbose else 0
+                self.data = self.load_data_file()
+                self.extract_features()
+            else:
+                FileNotFoundError("Error: Invalid data file name")
+
 
 
     def dereference_data(self, file_handle, dataset):
