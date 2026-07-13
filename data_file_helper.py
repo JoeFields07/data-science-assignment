@@ -38,7 +38,7 @@ class FileHelper():
 
 
 
-    def _dereference_data(self, file_handle, dataset):
+    def dereference_data(self, file_handle, dataset):
         """Safely reads data, resolving HDF5 references uniformly as lists if they contain arrays."""
 
         raw_data = np.array(dataset).T
@@ -148,7 +148,6 @@ class FileHelper():
             print(f"Channel {channel_name} features extracted") if self.verbose else 0
             #also spectral kurtosis using STFT - tough to tune
 
-        self.remove_data()          #remove raw data now features have been extracted
         return data_stats
     
 

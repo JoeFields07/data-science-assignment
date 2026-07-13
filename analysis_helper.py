@@ -173,18 +173,6 @@ class AnalysisHelper():
         Predict test data using classifier, plot confusion matrix
         """
         self.y_pred = self.clf.predict(self.X_test_PCA)
-        cm = confusion_matrix(self.y_test, self.y_pred)
-
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-
-        # Use num=figure_num to set the figure ID explicitly
-        fig, ax = plt.subplots(num=figure_num, figsize=(10, 8)) 
-        
-        disp.plot(cmap=plt.cm.Blues, ax=ax, colorbar=False)
-        plt.title("SVM Confusion Matrix")
-        ax.set_xticklabels(labels, rotation=30, ha='right') #rotate labels by 90deg to fit
-        plt.tight_layout()
-        plt.show(block = False)
     
 
     def plot_feature(self, fig_num, name_x, name_y, name_z, legend_labels):
@@ -226,3 +214,17 @@ class AnalysisHelper():
         
         plt.show(block = False)
 
+
+    def plot_classifier(self, fig_num, labels):
+        
+        cm = confusion_matrix(self.y_test, self.y_pred)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+
+        # Use num=figure_num to set the figure ID explicitly
+        fig, ax = plt.subplots(num=fig_num, figsize=(10, 8)) 
+        
+        disp.plot(cmap=plt.cm.Blues, ax=ax, colorbar=False)
+        plt.title("SVM Confusion Matrix")
+        ax.set_xticklabels(labels, rotation=30, ha='right') #rotate labels by Xdeg to fit
+        plt.tight_layout()
+        plt.show(block = False)

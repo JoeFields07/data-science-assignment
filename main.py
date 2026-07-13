@@ -65,6 +65,7 @@ def main():
                     obj.data = obj.load_data_file()
                     obj.data_stats = obj.extract_features()
                     obj.export_features()               #save newly extracted features
+                    obj.remove_data()          #remove raw data now features have been extracted
         
                 else:
                     FileNotFoundError("Error: Invalid data file name")
