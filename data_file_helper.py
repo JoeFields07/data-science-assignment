@@ -23,12 +23,12 @@ class FileHelper():
         
         filename = Path(filepath).stem                          #extract name of data file
         split_filename = filename.split('_')
-        self.experiment = split_filename[1]                
+        self.experiment = split_filename[1]
         self.variant = split_filename[2]
 
         self.feature_filepath = Path(FEATURE_FOLDER) / (filename + ".pkl")
-
-        self.data = {}                                          #initalise data dictionaries
+        
+        self.data = {}
         self.data_stats = {}
 
         if self.experiment == "Machining":                 #the Machining files have different keys
@@ -36,20 +36,9 @@ class FileHelper():
         else:
             self.channel_keys = ALL_CHANNEL_KEYS
 
-        if self.feature_filepath.is_file():                     #if feature data exists, load and don't calculate again
-            print("Feature file already exists") if self.verbose else 0
-            self.load_feature_file()
-        else:
-            if self.data_filepath.is_file():
-                print("Feature file does not exist") if self.verbose else 0
-                self.data = self.load_data_file()
-                self.extract_features()
-            else:
-                FileNotFoundError("Error: Invalid data file name")
 
 
-
-    def dereference_data(self, file_handle, dataset):
+    def _dereference_data(self, file_handle, dataset):
         """Safely reads data, resolving HDF5 references uniformly as lists if they contain arrays."""
 
         raw_data = np.array(dataset).T
@@ -93,11 +82,11 @@ class FileHelper():
 
 
     def load_feature_file(self):
-        """Loads the .pkl file containing cached features"""
+        """Returns the cached features inside the .pkl file"""
 
         print(f"Loading features from: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "rb") as f:
-            self.data_stats = pickle.load(f)
+            return pickle.load(f)
     
 
     def export_features(self):
@@ -124,11 +113,11 @@ class FileHelper():
         """
         #Takes roughly 3 mins per mat file. Efficiency could be improved with np arrays instead of dictionaries 
         #However only needs to be ran once and dicts are very human readable. 
-
+        data_stats = {}
         print("Starting feature extraction") if self.verbose else 0
         for channel_name in self.channel_keys:
             channel = self.data[channel_name]       #get data for the current channel
-            self.data_stats[channel_name] = {}      #need to initialise a dict for each channel
+            data_stats[channel_name] = {}      #need to initialise a dict for each channel
             
             #Process metrics row-by-row using list comprehensions to handle unequal lengths
             means       = np.array([np.mean(row) for row in channel])
@@ -144,23 +133,23 @@ class FileHelper():
             energy      = np.array([np.mean(np.square(row)) for row in channel])
 
             #Store the calculated 1D arrays into dictionary
-            self.data_stats[channel_name]['mean'] = means
-            self.data_stats[channel_name]['std'] = stds
-            self.data_stats[channel_name]['RMS'] = rms_vals
-            self.data_stats[channel_name]['kurtosis'] = np.nan_to_num(kurtosis, nan=0.0)        #sometimes these can be NaN due to python precision loss
-            self.data_stats[channel_name]['skewness'] = np.nan_to_num(skewness, nan=0.0)
-            self.data_stats[channel_name]['p2p'] = p2p
-            self.data_stats[channel_name]['energy'] = energy
-            self.data_stats[channel_name]['crest_factor']   = np.divide(x_max, rms_vals)
-            self.data_stats[channel_name]['shape_factor']   = np.divide(rms_vals, x_mean_abs)
-            self.data_stats[channel_name]['impulse_factor'] = np.divide(x_max, x_mean_abs)
-            self.data_stats[channel_name]['margin_factor']  = np.divide(x_max, np.square(x_mean_abs))
+            data_stats[channel_name]['mean'] = means
+            data_stats[channel_name]['std'] = stds
+            data_stats[channel_name]['RMS'] = rms_vals
+            data_stats[channel_name]['kurtosis'] = np.nan_to_num(kurtosis, nan=0.0)        #sometimes these can be NaN due to python precision loss
+            data_stats[channel_name]['skewness'] = np.nan_to_num(skewness, nan=0.0)
+            data_stats[channel_name]['p2p'] = p2p
+            data_stats[channel_name]['energy'] = energy
+            data_stats[channel_name]['crest_factor']   = np.divide(x_max, rms_vals)
+            data_stats[channel_name]['shape_factor']   = np.divide(rms_vals, x_mean_abs)
+            data_stats[channel_name]['impulse_factor'] = np.divide(x_max, x_mean_abs)
+            data_stats[channel_name]['margin_factor']  = np.divide(x_max, np.square(x_mean_abs))
 
             print(f"Channel {channel_name} features extracted") if self.verbose else 0
             #also spectral kurtosis using STFT - tough to tune
 
         self.remove_data()          #remove raw data now features have been extracted
-        self.export_features()      #save newly extracted features
+        return data_stats
     
 
     def plot_channel_feature(self, figure_num, rows, cols, idx, channel_name, feature_name):
@@ -189,6 +178,7 @@ class FileHelper():
         for channel_name in self.channel_keys:
             self.plot_all_channel_features(c, channel_name)
             c +=1
+
 
 
 if __name__ == "__main__":

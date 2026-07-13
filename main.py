@@ -1,11 +1,11 @@
-#python main.py -f Segmented_Linear_Baseline.mat Segmented_Linear_Heavy.mat Segmented_Linear_Override.mat Segmented_Spindle5000_Baseline.mat Segmented_Spindle5000_Heavy.mat Segmented_Spindle5000_Override.mat Segmented_Spindle5000_Unbalanced.mat -v
+# Created 08/07/2026
+# Author: Joseph Fields
+# Description: [[TODO]]
 
 from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
 from analysis_helper import AnalysisHelper
 import argparse
 
-#TODO
-    #add a simple classifier?
 
 def main():
     parser = argparse.ArgumentParser(description="Process a specific data file.")
@@ -54,6 +54,20 @@ def main():
     valid_file_combination = ("Machining" not in experiment_list) or (set(experiment_list) == {"Machining"})
 
     if valid_file_combination:
+        for obj in data_obj_list:       #loop through list of file helper objects
+            if obj.feature_filepath.is_file():              #if feature data exists, load and don't calculate again
+                print("Feature file already exists") if args.verbose else 0
+                obj.data_stats = obj.load_feature_file()
+            else:
+                if obj.data_filepath.is_file():         #if feature file doesn't exist, calculate it
+                    print("Feature file does not exist") if args.verbose else 0
+                    obj.data = obj.load_data_file()
+                    obj.data_stats = obj.extract_features()
+                    obj.export_features()               #save newly extracted features
+        
+                else:
+                    FileNotFoundError("Error: Invalid data file name")
+        
         channel_keys = data_obj_list[0].channel_keys
         
         analysis = AnalysisHelper()
