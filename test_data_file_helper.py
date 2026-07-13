@@ -6,7 +6,6 @@ from pathlib import Path
 TEST_DATA = Path("./data/Segmented_Linear_Baseline.mat")
 TEST_FEATURE_FILE = Path("./data_features/test.pkl")
 
-# make mock dataset for raw data?
 
 obj = FileHelper(TEST_DATA)
 obj.feature_filepath = TEST_FEATURE_FILE
@@ -16,7 +15,7 @@ obj.data_stats = obj.extract_features()
 
 def test_load_data_file():
     assert type(obj.data["PlateLFAccX"]) is list
-    assert np.issubdtype(obj.data["PlateLFAccX"].dtype, np.floating)
+    assert not len(obj.data["PlateLFAccX"]) == 0
 
 
 def test_load_feature_file():

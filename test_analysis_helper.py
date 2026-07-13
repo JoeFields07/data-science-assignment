@@ -14,7 +14,7 @@ TEST_DATA_LIST = [TEST_FEATURE_DATA, TEST_FEATURE_DATA, TEST_FEATURE_DATA]
 TEST_OUTLIER_DATA_X = np.array([[1.0, 1.1, 1.2, 1.3, 1.4],
                      [1.0, 1.1, 1.2, 1.3, 1.4],
                      [1.0, np.nan, 1.2, 1.3, 1.4],
-                     [1.0, 1000.0, 1.2, 1.3, 1.4]])
+                     [1000.0, 1.0, 1.2, 1.3, 1.4]])
 
 TEST_OUTLIER_DATA_Y = np.ones(4, dtype=int)
 
@@ -26,7 +26,7 @@ def test_remove_outliers_aligned():
     assert np.issubdtype(filtered_X.dtype, np.floating)
     assert type(filtered_y) is np.ndarray
     assert np.issubdtype(filtered_y.dtype, np.int64)
-    assert removed == 2
+    assert removed == 1     #should only remove the 1000, not the nan
 
 
 def test_import_feature_data():
