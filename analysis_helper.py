@@ -18,6 +18,7 @@ class AnalysisHelper():
         self.X_train, self.X_test = None, None      #train/test split datasets
         self.y_train, self.y_test = None, None
         self.X_train_PCA, self.X_test_PCA = None, None
+        self.y_pred = None
 
         self.scaler = StandardScaler()
         self.pca = PCA(n_components=3)
@@ -134,7 +135,6 @@ class AnalysisHelper():
         """
         self.X_train_PCA = self.pca.fit_transform(self.X_train)     #train and apply PCA
         print(f"Trained and applied PCA to X_train") if self.verbose else 0
-        pass
     
 
     def apply_PCA(self):
@@ -172,8 +172,8 @@ class AnalysisHelper():
         """
         Predict test data using classifier, plot confusion matrix
         """
-        y_pred = self.clf.predict(self.X_test_PCA)
-        cm = confusion_matrix(self.y_test, y_pred)
+        self.y_pred = self.clf.predict(self.X_test_PCA)
+        cm = confusion_matrix(self.y_test, self.y_pred)
 
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
 
@@ -185,7 +185,6 @@ class AnalysisHelper():
         ax.set_xticklabels(labels, rotation=30, ha='right') #rotate labels by 90deg to fit
         plt.tight_layout()
         plt.show(block = False)
-        return y_pred
     
 
     def plot_feature(self, fig_num, name_x, name_y, name_z, legend_labels):

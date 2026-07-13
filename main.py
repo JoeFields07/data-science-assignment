@@ -35,16 +35,13 @@ def main():
     # 3. Parse the arguments from the terminal
     args = parser.parse_args() 
 
-    experiment_list = []
+    
     data_obj_list = []
-    stats_list = []
-    labels = []
+    experiment_list = []
     c = 0
 
     for filename in args.file:
         data_obj_list.append(FileHelper(args.directory + filename))    #could avoid saving the data
-        stats_list.append(data_obj_list[c].data_stats)
-        labels.append(data_obj_list[c].experiment + data_obj_list[c].variant)
         experiment_list.append(data_obj_list[c].experiment)
         c+=1
 
@@ -54,10 +51,14 @@ def main():
     valid_file_combination = ("Machining" not in experiment_list) or (set(experiment_list) == {"Machining"})
 
     if valid_file_combination:
+        stats_list = []
+        labels = []
         for obj in data_obj_list:       #loop through list of file helper objects
+            
             if obj.feature_filepath.is_file():              #if feature data exists, load and don't calculate again
                 print("Feature file already exists") if args.verbose else 0
                 obj.data_stats = obj.load_feature_file()
+
             else:
                 if obj.data_filepath.is_file():         #if feature file doesn't exist, calculate it
                     print("Feature file does not exist") if args.verbose else 0
@@ -67,6 +68,9 @@ def main():
         
                 else:
                     FileNotFoundError("Error: Invalid data file name")
+                    
+            stats_list.append(obj.data_stats)
+            labels.append(obj.experiment + obj.variant)
         
         channel_keys = data_obj_list[0].channel_keys
         
@@ -84,6 +88,7 @@ def main():
         analysis.train_classifier(classifier='RF', C=None, n_estimators=100, random_state=42)
         analysis.predict_classifier(3, labels)
 
+        pass
     else:
         print("Error: Invalid combination of data files")
 
