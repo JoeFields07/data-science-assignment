@@ -1,1 +1,1 @@
-python main.py -v -f Segmented_Linear_Baseline.mat Segmented_Linear_Heavy.mat Segmented_Linear_Override.mat Segmented_Spindle5000_Baseline.mat Segmented_Spindle5000_Heavy.mat Segmented_Spindle5000_Override.mat Segmented_Spindle5000_Unbalanced.mat Segmented_Spindle12000_Baseline.mat Segmented_Spindle12000_Heavy.mat Segmented_Spindle12000_Override.mat Segmented_Spindle12000_Unbalanced.mat
+python main.py -v -d "./data/" -f Segmented_Linear_Baseline.mat Segmented_Linear_Heavy.mat Segmented_Linear_Override.mat 

@@ -1,6 +1,9 @@
 # Created 08/07/2026
 # Author: Joseph Fields
-# Description: [[TODO]]
+# Description: Manages file I/O operations. It loads raw structured sensor data 
+# from .mat files using HDF5, extracts 11 different statistical features per channel, 
+# caches them locally as .pkl files to save processing time on subsequent runs. 
+# Also includes plotting functions for data inspection.
 
 from pathlib import Path
 import h5py
@@ -15,7 +18,7 @@ FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_fact
 FEATURE_FOLDER = Path("./data_features/")
 
 class FileHelper():
-    def __init__(self, filepath, verbose=True):
+    def __init__(self, filepath, verbose=False):
 
         self.verbose = verbose
         self.data_filepath = filepath
@@ -39,8 +42,9 @@ class FileHelper():
 
 
     def dereference_data(self, file_handle, dataset):
-        """Safely reads data, resolving HDF5 references uniformly as lists if they contain arrays."""
-
+        """
+        Safely reads data, resolving HDF5 references as lists if they contain arrays.
+        """
         raw_data = np.array(dataset).T
         
         if raw_data.dtype == object and len(raw_data) > 0:      #check data is valid
@@ -59,16 +63,16 @@ class FileHelper():
         
         else:
             # For standard purely numeric/flat columns, return as a flat numpy array
-            return raw_data.flatten()       #I dont think this ever happens
+            return raw_data.flatten()       #Don't think this ever happens
 
     
     def load_data_file(self):
-        """Loads the .mat file and returns a dictionary of the channels"""
-
+        """
+        Loads the .mat file and returns a dictionary of the channels.
+        """
         print(f"Loading sensor data from: {self.data_filepath}") if self.verbose else 0
         with h5py.File(self.data_filepath, 'r') as f:
             clean_data = {}
-            
             all_keys = list(f.keys())     
             data_group = f[all_keys[1]]   #second key contains the data
             
@@ -77,29 +81,34 @@ class FileHelper():
                 
                 if isinstance(channel_data, h5py.Dataset):  #could remove
                     clean_data[channel_key] = self.dereference_data(f, channel_data)
+        
         print("Data imported successfully") if self.verbose else 0
+        
         return clean_data
 
 
     def load_feature_file(self):
-        """Returns the cached features inside the .pkl file"""
-
+        """
+        Returns the cached features inside the .pkl file.
+        """
         print(f"Loading features from: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "rb") as f:
             return pickle.load(f)
     
 
     def export_features(self):
-        """Exports the features to a .pkl file cache"""
-
+        """
+        Exports the features to a .pkl file cache.
+        """
         print(f"Exporting features to: {self.feature_filepath}") if self.verbose else 0
         with open(self.feature_filepath, "wb") as f:
             pickle.dump(self.data_stats, f)
 
 
     def remove_data(self):
-        """Removes the raw data to save memory once features have been calculated"""
-
+        """
+        Removes the raw data to save memory once features have been calculated.
+        """
         self.data = {}
         print("Removed raw data") if self.verbose else 0
 
@@ -109,12 +118,13 @@ class FileHelper():
         Extracts features from each channel, creating a two layer dictionary for each channel and feature
         The following features are calculated:
         mean, standard deviation, root mean squared (RMS), kurtosis, skewness, peak-to-peak, crest factor, 
-        shape factor, impulse factor, margin factor and energy,
+        shape factor, impulse factor, margin factor and energy.
         """
-        #Takes roughly 3 mins per mat file. Efficiency could be improved with np arrays instead of dictionaries 
-        #However only needs to be ran once and dicts are very human readable. 
+        # ~3 mins per .mat file. Efficiency could be improved with np arrays instead of dictionaries 
+        # However only needs to be ran once and dicts are very human readable. 
         data_stats = {}
         print("Starting feature extraction") if self.verbose else 0
+        
         for channel_name in self.channel_keys:
             channel = self.data[channel_name]       #get data for the current channel
             data_stats[channel_name] = {}      #need to initialise a dict for each channel
@@ -146,12 +156,14 @@ class FileHelper():
             data_stats[channel_name]['margin_factor']  = np.divide(x_max, np.square(x_mean_abs))
 
             print(f"Channel {channel_name} features extracted") if self.verbose else 0
-            #also spectral kurtosis using STFT - tough to tune
 
         return data_stats
     
 
     def plot_channel_feature(self, figure_num, rows, cols, idx, channel_name, feature_name):
+        """
+        Plot a specific feature in a channel for visualisation.
+        """
         data = self.data_stats[channel_name][feature_name]
         N = len(data)
 
@@ -165,6 +177,9 @@ class FileHelper():
 
 
     def plot_all_channel_features(self, figure_num, channel_name):
+        """
+        Plot a all features in a specific channel for visualisation.
+        """
         c = 1
         for feature in FEATURE_KEYS:
             self.plot_channel_feature(figure_num, 3, 4, c, channel_name, feature)
@@ -173,6 +188,9 @@ class FileHelper():
 
 
     def plot_all_features(self, start_figure_num):
+        """
+        Plot all features in all channels for visualisation. (Memory intensive)
+        """
         c = start_figure_num
         for channel_name in self.channel_keys:
             self.plot_all_channel_features(c, channel_name)
@@ -181,19 +199,6 @@ class FileHelper():
 
 
 if __name__ == "__main__":
-    #file = FileHelper('./data/Segmented_Linear_Baseline.mat')
-    #file = FileHelper('./data/Segmented_Linear_Override.mat')
-    #file = FileHelper('./data/Segmented_Linear_Heavy.mat')
-
-    #file = FileHelper('./data/Segmented_Spindle5000_Baseline.mat')
-    #file = FileHelper('./data/Segmented_Spindle5000_Heavy.mat')
-    file = FileHelper('./data/Segmented_Spindle5000_Override.mat')
-    #file = FileHelper('./data/Segmented_Spindle5000_Unbalanced.mat')
-
-    #file = FileHelper('./data/Segmented_Spindle12000_Baseline.mat')
-    #file = FileHelper('./data/Segmented_Spindle12000_Heavy.mat')
-    #file = FileHelper('./data/Segmented_Spindle12000_Override.mat')
-    #file = FileHelper('./data/Segmented_Spindle12000_Unbalanced.mat')
-
+    file = FileHelper('./data/Segmented_Linear_Baseline.mat', verbose=True)     #for debugging
     file.plot_all_features(1)
     plt.show()

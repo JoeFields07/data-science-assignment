@@ -93,7 +93,7 @@ def test_predict_classifier():
     obj.train_PCA()
     obj.apply_PCA()
     obj.train_classifier(classifier='RF', C=1.0, n_estimators=100, random_state=42)
-    obj.predict_classifier(1, TEST_LABELS)
+    obj.predict_classifier()
 
     assert type(obj.y_pred) is np.ndarray
     assert np.issubdtype(obj.y_pred.dtype, np.int64)
