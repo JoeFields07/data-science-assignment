@@ -22,7 +22,7 @@ This software provides an automated pipeline to import raw AMRC sensor data (fro
 `test_analysis_helper.py`: Unit tests for analysis_helper.py functions.
 
 
-# Dependancies
+# Dependencies
 Uses Python 3.13.12  
 `pip install -r requirements.txt`
 
@@ -30,7 +30,7 @@ Uses Python 3.13.12
 # Installation Instructions
 `git clone https://github.com/JoeFields07/data-science-assignment`  
 
-The .mat files from the [dataset](https://orda.shef.ac.uk/articles/dataset/Sensor_signals_for_machine_tool_and_process_health_assessment_/24125715) must be downloaded, 
+The '.mat' files from the [dataset](https://orda.shef.ac.uk/articles/dataset/Sensor_signals_for_machine_tool_and_process_health_assessment_/24125715) must be downloaded, 
 unzipped and placed in a target directory.
 
 
@@ -42,12 +42,12 @@ The program can also be run using a .bat file (Windows) where the arguments can 
 `launch.bat`  
 
 
-Further customisation can be performed by modifying some of the constants in main.py.
+Further customisation can be performed by modifying the constants in `main.py`.
 
 | Parameter | Default | Description |
 | :--- | :--- | :--- |
 | `MAD_FILTER_THRESHOLD` | 10.0 | Threshold for Median Absolute Difference (MAD) filtering. |
-| `PCA_COMPONENTS` | 10 | Number of PCA components to calculate. More PCA components means the classifier has more information to use during classification and will improve accuracy. |
+| `PCA_COMPONENTS` | 10 | Number of PCA components to calculate. More PCA components means the classifier has more information to use and will improve accuracy. Cannot be higher than the number of features. |
 | `CLASSIFIER` | 'RF' | Select the classifier - 'SVM' for SVM or 'RF' for Random Forest. |
 | `RF_N_ESTIMATORS` | 100 | Random Forest classifier 'n_estimators' parameter. |
 | `SVM_C` | 1.0 | SVM Classifier 'C' parameter. |
