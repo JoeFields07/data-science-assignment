@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 
 ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
 MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleLoad", "SpindleX", "SpindleY", "SpindleZ", "Power"]
+ALL_PLOT_KEYS = ["SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean"]
+MACH_PLOT_KEYS = ["SpindleX_p2p", "SpindleY_kurtosis", "SpindleX_mean"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
 FEATURE_FOLDER = Path("./data_features/")
 
@@ -36,8 +38,10 @@ class FileHelper():
 
         if self.experiment == "Machining":                 #the Machining files have different keys
             self.channel_keys = MACH_CHANNEL_KEYS
+            self.plot_keys = MACH_PLOT_KEYS
         else:
             self.channel_keys = ALL_CHANNEL_KEYS
+            self.plot_keys = ALL_PLOT_KEYS
 
 
 

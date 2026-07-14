@@ -28,7 +28,7 @@ class AnalysisHelper():
         self.y_pred = None
 
         self.scaler = StandardScaler()
-        self.pca = PCA(n_components=3)                  #can increase to improve ML prediction 
+        self.pca = None                                 #can increase to improve ML prediction 
         self.clf = None
 
 
@@ -133,10 +133,11 @@ class AnalysisHelper():
         print(f"Scaled X_train and X_test matrix features") if self.verbose else 0
 
 
-    def train_PCA(self):
+    def train_PCA(self, n_components = 3, random_state=42):
         """
         Obtains the PCA transform using the X_train dataset.
         """
+        self.pca = PCA(n_components=n_components, random_state=random_state)
         self.X_train_PCA = self.pca.fit_transform(self.X_train)     #train and apply PCA
         print(f"Trained and applied PCA to X_train") if self.verbose else 0
     
@@ -185,17 +186,21 @@ class AnalysisHelper():
         self.plot_data(fig_num, x, y, z, "PCA1", "PCA2", "PCA3", legend_labels)
 
 
-    def plot_feature(self, fig_num, name_x, name_y, name_z, legend_labels):
+    def plot_feature(self, fig_num, plot_keys, legend_labels):
         """
         Plot the 3 specified features.
         """
-        x_idx = self.full_keys.index(name_x)
-        y_idx = self.full_keys.index(name_y)
-        z_idx = self.full_keys.index(name_z)
-        x = self.X_train[:, x_idx]
-        y = self.X_train[:, y_idx]
-        z = self.X_train[:, z_idx]
-        self.plot_data(fig_num, x, y, z, name_x, name_y, name_z, legend_labels)
+        if len(plot_keys) == 3:
+            x_idx = self.full_keys.index(plot_keys[0])
+            y_idx = self.full_keys.index(plot_keys[1])
+            z_idx = self.full_keys.index(plot_keys[2])
+            x = self.X_train[:, x_idx]
+            y = self.X_train[:, y_idx]
+            z = self.X_train[:, z_idx]
+            self.plot_data(fig_num, x, y, z, plot_keys[0], plot_keys[1], plot_keys[2], legend_labels)
+
+        else:
+            print("Error: Invalid number of plotting features")
 
 
     def plot_data(self, fig_num, x, y, z, x_label, y_label, z_label, legend_labels):

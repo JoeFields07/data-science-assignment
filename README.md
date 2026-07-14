@@ -42,7 +42,19 @@ The program can also be run using a .bat file (Windows):
 ```launch.bat```  
 where the arguments in the .bat file can be modified as needed.  
 
-Unit testing can be performed using:  
+Further customisation can be performed by modifying some of the constants in main.py
+
+```MAD_FILTER_THRESHOLD```: default 10.0: Threshold for Median Absolute Difference (MAD) filtering.  
+```PCA_COMPONENTS```      : default 10  : Number of PCA components to calculate. More PCA components means 
+                            the classifier has more information to use during classification and will improve accuracy.  
+```CLASSIFIER'```         : default 'RF': Select the classifier - 'SVM' for SVM or 'RF' for Random Forest.  
+```RF_N_ESTIMATORS```     : default 100 : Random Forest classifier 'n_estimators' parameter.  
+```SVM_C```               : default 1.0 : SVM Classifier 'C' parameter.  
+```RANDOM_SEED```         : default 42  : Random seed used for train_test_split, PCA and classifier training.  
+```TRAIN_TEST_SPLIT```    : default 0.2 : Proportion of total set to the test set. 0.2 means 80% train and 20% test  
+
+
+Unit testing can also be performed using:  
 ```pytest ./```  
 
 ## CLI Arguments

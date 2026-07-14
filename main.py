@@ -4,6 +4,15 @@
 # flow between data_file_helper.py and analysis_helper.py, parsing file arguments and 
 # validating that dataset types match appropriately before running the pipeline.
 
+MAD_FILTER_THRESHOLD = 10.0     # threshold for MAD filtering (default 10.0)
+PCA_COMPONENTS = 10             # number of PCA components to calculate (default 10)
+CLASSIFIER = 'RF'               # classifier ('SVM' or 'RF')
+RF_N_ESTIMATORS = 100           # Random Forest classifier 'n_estimators' parameter (default 100)
+SVM_C = 1.0                     # SVM classifier 'C' parameter (default 1.0)
+RANDOM_SEED = 42                # random seed used
+TRAIN_TEST_SPLIT = 0.2          # proportion of the test set (train is 1-test)
+
+
 from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
 from analysis_helper import AnalysisHelper
 import argparse
@@ -72,21 +81,22 @@ def main():
             labels.append(obj.experiment + obj.variant)
         
         channel_keys = data_obj_list[0].channel_keys        #channel_keys should be same for all files
+        plot_keys = data_obj_list[0].plot_keys
         analysis = AnalysisHelper(verbose=args.verbose) 
 
         #combine FileHelper dicts into ML friendly matrix
-        analysis.import_feature_data(stats_list, channel_keys, FEATURE_KEYS, 9.0)   
-        analysis.preprocess_data(0.2, 42)       #split and standardise
+        analysis.import_feature_data(stats_list, channel_keys, FEATURE_KEYS, MAD_FILTER_THRESHOLD)   
+        analysis.preprocess_data(test_size=TRAIN_TEST_SPLIT, random_state=RANDOM_SEED)       #split and standardise
         
-        analysis.train_PCA()                    #train PCA on X_train
-        analysis.apply_PCA()                    #apply trained PCA to X_test
+        analysis.train_PCA(n_components=PCA_COMPONENTS, random_state=RANDOM_SEED) #train PCA on X_train
+        analysis.apply_PCA()                            #apply trained PCA to X_test
         
         
-        analysis.train_classifier(classifier='RF', C=None, n_estimators=100, random_state=42)
+        analysis.train_classifier(classifier='RF', C=SVM_C, n_estimators=RF_N_ESTIMATORS, random_state=RANDOM_SEED)
         analysis.predict_classifier()           #train and predict with classifier
 
         analysis.plot_PCA(1, labels)            #plot results
-        analysis.plot_feature(2, "SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean", labels)
+        analysis.plot_feature(2, plot_keys, labels)
         analysis.plot_classifier(3, labels)
     else:
         print("Error: Invalid combination of data files")
