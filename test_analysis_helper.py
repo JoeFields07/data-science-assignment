@@ -4,7 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
 MAD_FILTER_THRESHOLD = 10.0     # threshold for MAD filtering (default 10.0)
-PCA_COMPONENTS = 10             # number of PCA components to calculate (default 10)
+PCA_COMPONENTS = 4              # number of PCA components to calculate (CHANGING THIS WILL BREAK THE TEST)
 CLASSIFIER = 'RF'               # classifier ('SVM' or 'RF')
 RF_N_ESTIMATORS = 100           # Random Forest classifier 'n_estimators' parameter (default 100)
 SVM_C = 1.0                     # SVM classifier 'C' parameter (default 1.0)
