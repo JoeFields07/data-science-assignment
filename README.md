@@ -26,6 +26,10 @@ This software provides an automated pipeline to import raw AMRC sensor data (fro
 Uses Python 3.13.12  
 ```pip install -r requirements.txt```
 
+
+# Installation Instructions
+```git clone https://github.com/JoeFields07/data-science-assignment```  
+
 The .mat files from the [dataset](https://orda.shef.ac.uk/articles/dataset/Sensor_signals_for_machine_tool_and_process_health_assessment_/24125715) must be downloaded, 
 unzipped and placed in a target directory.
 
