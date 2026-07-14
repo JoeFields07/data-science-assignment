@@ -65,4 +65,8 @@ Unit testing can also be performed using:
 | -d, --directory | N | The directory path containing the raw data files. Defaults to ./data/. |
 | -v, --verbose | N | Flag to enable console logging during execution. |
 
-**_Note on File Alignment:_** The pipeline validates that you do not mix "Machining" experiment files with other types, as they contain different sensor channel mappings.
+**_Note on File Compatibility:_** The pipeline validates that you do not mix "Machining" experiment files with other types, as they contain different sensor channel mappings.
+
+
+# License
+This code is available under an MIT License, please see the `LICENSE` file for more information.
