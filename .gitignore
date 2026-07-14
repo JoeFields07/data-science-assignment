@@ -220,4 +220,4 @@ __marimo__/
 data/
 data_parquet/
 data_features/
-.pdf
+*.pdf

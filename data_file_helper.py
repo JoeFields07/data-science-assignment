@@ -21,7 +21,7 @@ class FileHelper():
     def __init__(self, filepath, verbose=False):
 
         self.verbose = verbose
-        self.data_filepath = filepath
+        self.data_filepath = Path(filepath)
         FEATURE_FOLDER.mkdir(parents=True, exist_ok=True)       #make feature folder if it doesn't already exist
         
         filename = Path(filepath).stem                          #extract name of data file
