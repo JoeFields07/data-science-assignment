@@ -21,6 +21,8 @@ This software provides an automated pipeline to import raw AMRC sensor data (fro
 
 `test_analysis_helper.py`: Unit tests for analysis_helper.py functions.
 
+`launch.bat`: Provides a convenient way to launch the `main.py` script with all preset arguments.
+
 
 # Dependencies
 Uses Python 3.13.12  
@@ -36,7 +38,7 @@ unzipped and placed in a target directory.
 
 # Usage Instructions
 The program can be run through the terminal:  
-`python main.py -v -d "folder_path" -f "file_name1" "file_name2" "file_name3" ...`
+`python main.py -v -d "data_folder_name" -f "file_name1" "file_name2" "file_name3" ...`
 
 The program can also be run using a .bat file (Windows) where the arguments can be modified as needed:  
 `launch.bat`  
@@ -62,7 +64,7 @@ Unit testing can also be performed using:
 | Argument | Required | Description |
 | :--- | :--- | :--- |
 | -f, --file | Y | One or more space-separated .mat file names to include in the analysis. |
-| -d, --directory | N | The directory path containing the raw data files. Defaults to ./data/. |
+| -d, --directory | N | The name of the directory containing the raw data files. Defaults to 'data'. |
 | -v, --verbose | N | Flag to enable console logging during execution. |
 
 **_Note on File Compatibility:_** The pipeline validates that you do not mix "Machining" experiment files with other types, as they contain different sensor channel mappings.

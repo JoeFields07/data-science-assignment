@@ -18,21 +18,23 @@ MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleLoad",
 ALL_PLOT_KEYS = ["SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean"]
 MACH_PLOT_KEYS = ["SpindleX_p2p", "SpindleY_kurtosis", "SpindleX_mean"]
 FEATURE_KEYS = ['mean', 'std', 'RMS', 'kurtosis', 'skewness', 'p2p', 'crest_factor', 'shape_factor', 'impulse_factor', 'margin_factor', 'energy']
-FEATURE_FOLDER = Path("./data_features/")
+FEATURE_FOLDER = Path("data_features")
 
 class FileHelper():
-    def __init__(self, filepath, verbose=False):
+    def __init__(self, project_root, filepath, verbose=False):
 
         self.verbose = verbose
-        self.data_filepath = Path(filepath)
-        FEATURE_FOLDER.mkdir(parents=True, exist_ok=True)       #make feature folder if it doesn't already exist
+        self.data_file_path = project_root / filepath 
         
-        filename = Path(filepath).stem                          #extract name of data file
+        filename = Path(self.data_file_path).stem                       #extract name of data file
         split_filename = filename.split('_')
         self.experiment = split_filename[1]
         self.variant = split_filename[2]
 
-        self.feature_filepath = Path(FEATURE_FOLDER) / (filename + ".pkl")
+        feature_folder_path = project_root / FEATURE_FOLDER
+        feature_folder_path.mkdir(parents=True, exist_ok=True)          #make feature folder if it doesn't already exist
+        
+        self.feature_file_path = feature_folder_path / Path(filename + ".pkl")
         
         self.data = {}
         self.data_stats = {}
@@ -43,7 +45,6 @@ class FileHelper():
         else:
             self.channel_keys = ALL_CHANNEL_KEYS
             self.plot_keys = ALL_PLOT_KEYS
-
 
 
     def dereference_data(self, file_handle, dataset):
@@ -75,8 +76,8 @@ class FileHelper():
         """
         Loads the .mat file and returns a dictionary of the channels.
         """
-        print(f"Loading sensor data from: {self.data_filepath}") if self.verbose else 0
-        with h5py.File(self.data_filepath, 'r') as f:
+        print(f"Loading sensor data from: {self.data_file_path}") if self.verbose else 0
+        with h5py.File(self.data_file_path, 'r') as f:
             clean_data = {}
             all_keys = list(f.keys())     
             data_group = f[all_keys[1]]   #second key contains the data
@@ -96,8 +97,8 @@ class FileHelper():
         """
         Returns the cached features inside the .pkl file.
         """
-        print(f"Loading features from: {self.feature_filepath}") if self.verbose else 0
-        with open(self.feature_filepath, "rb") as f:
+        print(f"Loading features from: {self.feature_file_path}") if self.verbose else 0
+        with open(self.feature_file_path, "rb") as f:
             return pickle.load(f)
     
 
@@ -105,8 +106,8 @@ class FileHelper():
         """
         Exports the features to a .pkl file cache.
         """
-        print(f"Exporting features to: {self.feature_filepath}") if self.verbose else 0
-        with open(self.feature_filepath, "wb") as f:
+        print(f"Exporting features to: {self.feature_file_path}") if self.verbose else 0
+        with open(self.feature_file_path, "wb") as f:
             pickle.dump(self.data_stats, f)
 
 
@@ -204,8 +205,10 @@ class FileHelper():
 
 
 if __name__ == "__main__":
-    file = FileHelper('./data/Segmented_Spindle5000_Override.mat', verbose=True)     #for debugging
-    if file.feature_filepath.is_file():              #if feature data cached, load and don't calculate again
+    file = FileHelper(project_root = Path(__file__).resolve().parent.parent,      #may differ between machines
+                      filepath = Path('data/Segmented_Spindle5000_Override.mat'), 
+                      verbose = True)     #for debugging
+    if file.feature_file_path.is_file():              #if feature data cached, load and don't calculate again
         print("Feature file already exists")
         file.data_stats = file.load_feature_file()
     else:

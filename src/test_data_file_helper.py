@@ -3,12 +3,13 @@ import numpy as np
 import os
 from pathlib import Path
 
-TEST_DATA = Path("./data/Segmented_Linear_Baseline.mat")
-TEST_FEATURE_FILE = Path("./data_features/test.pkl")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent          #change if file structure is different
+TEST_DATA = Path("data/Segmented_Linear_Baseline.mat")
+TEST_FEATURE_FILE = PROJECT_ROOT / Path("data_features") / Path("test.pkl")
 
 
-obj = FileHelper(TEST_DATA)
-obj.feature_filepath = TEST_FEATURE_FILE
+obj = FileHelper(project_root=PROJECT_ROOT, filepath=TEST_DATA)
+obj.feature_file_path = TEST_FEATURE_FILE
 obj.data = obj.load_data_file()
 obj.data_stats = obj.extract_features()
 
@@ -19,7 +20,7 @@ def test_load_data_file():
 
 
 def test_load_feature_file():
-    if not TEST_FEATURE_FILE.is_file():
+    if not obj.feature_file_path.is_file():
         obj.export_features()
     data_stats = obj.load_feature_file()
 
@@ -28,16 +29,16 @@ def test_load_feature_file():
 
     assert type(data_stats["PlateLFAccX"]["kurtosis"]) is np.ndarray
     assert np.issubdtype(data_stats["PlateLFAccX"]["kurtosis"].dtype, np.floating)
-    os.remove(TEST_FEATURE_FILE)
+    os.remove(obj.feature_file_path)
     
     
 def test_export_features():
-    if TEST_FEATURE_FILE.is_file():
-        os.remove(TEST_FEATURE_FILE)
+    if obj.feature_file_path.is_file():
+        os.remove(obj.feature_file_path)
     obj.export_features()
 
-    assert TEST_FEATURE_FILE.is_file()
-    os.remove(TEST_FEATURE_FILE)
+    assert obj.feature_file_path.is_file()
+    os.remove(obj.feature_file_path)
 
 
 def test_remove_data():

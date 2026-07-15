@@ -4,12 +4,13 @@
 # flow between data_file_helper.py and analysis_helper.py, parsing file arguments and 
 # validating that dataset types match appropriately before running the pipeline.
 
-from data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
-from analysis_helper import AnalysisHelper
+from src.data_file_helper import FileHelper, ALL_CHANNEL_KEYS, MACH_CHANNEL_KEYS, FEATURE_KEYS
+from src.analysis_helper import AnalysisHelper
 import argparse
+from pathlib import Path
 
-
-MAD_FILTER_THRESHOLD = 10.0     # threshold for MAD filtering (default 10.0)
+PROJECT_ROOT = Path(__file__).resolve().parent      #get current folder (project root)
+MAD_FILTER_THRESHOLD = 25.0     # threshold for MAD filtering (default 10.0)
 PCA_COMPONENTS = 10             # number of PCA components to calculate (default 10)
 CLASSIFIER = 'RF'               # classifier ('SVM' or 'RF')
 RF_N_ESTIMATORS = 100           # Random Forest classifier 'n_estimators' parameter (default 100)
@@ -25,7 +26,7 @@ def main():
         "-d", "--directory",
         type=str,
         required=False,
-        default="./data/",
+        default="data",
         help="Folder containing cut files (default is './data/')"
     )
 
@@ -51,8 +52,9 @@ def main():
     c = 0
 
     for filename in args.file:                      #create list of FileHelper instances for each .mat file
-        data_obj_list.append(FileHelper(filepath=args.directory + filename, 
-                                        verbose=args.verbose))
+        data_obj_list.append(FileHelper(project_root = PROJECT_ROOT,
+                                        filepath = Path(args.directory + "/" + filename), 
+                                        verbose = args.verbose))
         experiment_list.append(data_obj_list[c].experiment)
         c+=1
 
@@ -63,12 +65,12 @@ def main():
         stats_list = []
         labels = []
         for obj in data_obj_list:                   #loop through list of FileHelper instances
-            if obj.feature_filepath.is_file():      #if feature data cached, load and don't calculate again
+            if obj.feature_file_path.is_file():      #if feature data cached, load and don't calculate again
                 print("Feature file already exists") if args.verbose else 0
                 obj.data_stats = obj.load_feature_file()
 
             else:
-                if obj.data_filepath.is_file():     #if feature file doesn't exist, calculate it
+                if obj.data_file_path.is_file():     #if feature file doesn't exist, calculate it
                     print("Feature file does not exist") if args.verbose else 0
                     obj.data = obj.load_data_file()
                     obj.data_stats = obj.extract_features()
@@ -87,29 +89,35 @@ def main():
         analysis = AnalysisHelper(verbose=args.verbose) 
 
         #combine FileHelper dicts into ML friendly matrix
-        analysis.import_feature_data(data_list=stats_list, 
-                                     channel_keys=channel_keys, 
-                                     feature_keys=FEATURE_KEYS, 
-                                     threshold_limit=MAD_FILTER_THRESHOLD)   
+        analysis.import_feature_data(data_list = stats_list, 
+                                     channel_keys = channel_keys, 
+                                     feature_keys = FEATURE_KEYS, 
+                                     threshold_limit = MAD_FILTER_THRESHOLD)   
         
-        analysis.preprocess_data(test_size=TRAIN_TEST_SPLIT, 
-                                 random_state=RANDOM_SEED)  #split and standardise
+        analysis.preprocess_data(test_size = TRAIN_TEST_SPLIT, 
+                                 random_state = RANDOM_SEED)  #split and standardise
         
-        analysis.train_PCA(n_components=PCA_COMPONENTS, 
-                           random_state=RANDOM_SEED)    #train PCA on X_train
+        analysis.train_PCA(n_components = PCA_COMPONENTS, 
+                           random_state = RANDOM_SEED)    #train PCA on X_train
         analysis.apply_PCA()                            #apply trained PCA to X_test
         
-        
-        analysis.train_classifier(classifier='RF', 
-                                  C=SVM_C, 
-                                  n_estimators=RF_N_ESTIMATORS, 
-                                  random_state=RANDOM_SEED)
-        analysis.predict_classifier()                   #train and predict with classifier
+        analysis.plot_PCA(fig_num = 1, legend_labels = labels)
+        analysis.plot_feature(fig_num = 2, plot_keys = plot_keys, legend_labels = labels)
 
-        analysis.plot_PCA(fig_num=1, legend_labels=labels)
-        analysis.plot_feature(fig_num=2, plot_keys=plot_keys, legend_labels=labels)
-        analysis.plot_classifier(fig_num=3, labels=labels)
+        analysis.train_classifier(classifier = 'RF', 
+                                  C = SVM_C, 
+                                  n_estimators = RF_N_ESTIMATORS, 
+                                  random_state = RANDOM_SEED)
+        analysis.predict_classifier()                   #train and predict with classifier
+        analysis.plot_classifier(fig_num = 3, classifier = 'RF', labels = labels)
     
+        analysis.train_classifier(classifier = 'SVM', 
+                                  C = SVM_C, 
+                                  n_estimators = RF_N_ESTIMATORS, 
+                                  random_state = RANDOM_SEED)
+        analysis.predict_classifier()                   #train and predict with classifier
+        analysis.plot_classifier(fig_num = 4, classifier = 'SVM', labels = labels)
+
     else:
         print("Error: Invalid combination of data files")
 

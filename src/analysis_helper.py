@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
 
 
 class AnalysisHelper():
@@ -183,7 +183,8 @@ class AnalysisHelper():
         x = self.X_train_PCA[:, 0]
         y = self.X_train_PCA[:, 1]
         z = self.X_train_PCA[:, 2]
-        self.plot_data(fig_num, x, y, z, "PCA1", "PCA2", "PCA3", legend_labels)
+        title = "PCA Results"
+        self.plot_data(fig_num, x, y, z, "PCA1", "PCA2", "PCA3", title, legend_labels)
 
 
     def plot_feature(self, fig_num, plot_keys, legend_labels):
@@ -197,13 +198,14 @@ class AnalysisHelper():
             x = self.X_train[:, x_idx]
             y = self.X_train[:, y_idx]
             z = self.X_train[:, z_idx]
-            self.plot_data(fig_num, x, y, z, plot_keys[0], plot_keys[1], plot_keys[2], legend_labels)
+            title = "Selected Feature Results"
+            self.plot_data(fig_num, x, y, z, plot_keys[0], plot_keys[1], plot_keys[2], title, legend_labels)
 
         else:
             print("Error: Invalid number of plotting features")
 
 
-    def plot_data(self, fig_num, x, y, z, x_label, y_label, z_label, legend_labels):
+    def plot_data(self, fig_num, x, y, z, x_label, y_label, z_label, title, legend_labels):
         """
         Standard 3D plotting function.
         """
@@ -222,6 +224,7 @@ class AnalysisHelper():
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.set_zlabel(z_label)
+        ax.set_title(title)
 
         # Create a nice legend showing which color represents which dataset label (1, 2, or 3)
         handles, _ = scatter.legend_elements()
@@ -232,10 +235,12 @@ class AnalysisHelper():
         plt.show(block = False)
 
 
-    def plot_classifier(self, fig_num, labels):
+    def plot_classifier(self, fig_num, classifier, labels):
         """
         Display confusion matrix of classification result.
         """
+        print("#### " + classifier + " ####")
+        print(classification_report(self.y_test, self.y_pred, target_names=labels))
         cm = confusion_matrix(self.y_test, self.y_pred)
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
 
@@ -243,7 +248,7 @@ class AnalysisHelper():
         fig, ax = plt.subplots(num=fig_num, figsize=(10, 8)) 
         
         disp.plot(cmap=plt.cm.Blues, ax=ax, colorbar=False)
-        plt.title("SVM Confusion Matrix")
+        plt.title(classifier + " Confusion Matrix")
         ax.set_xticklabels(labels, rotation=30, ha='right') #rotate labels by Xdeg to fit
         plt.tight_layout()
         plt.show(block = False)
