@@ -189,6 +189,7 @@ class FileHelper():
             self.plot_channel_feature(figure_num, 3, 4, c, channel_name, feature)
             c +=1
         plt.suptitle(channel_name)
+        plt.tight_layout(w_pad=-1.0)
 
 
     def plot_all_features(self, start_figure_num):
@@ -203,6 +204,19 @@ class FileHelper():
 
 
 if __name__ == "__main__":
-    file = FileHelper('./data/Segmented_Linear_Baseline.mat', verbose=True)     #for debugging
+    file = FileHelper('./data/Segmented_Spindle5000_Override.mat', verbose=True)     #for debugging
+    if file.feature_filepath.is_file():              #if feature data cached, load and don't calculate again
+        print("Feature file already exists")
+        file.data_stats = file.load_feature_file()
+    else:
+        if file.data_filepath.is_file():         #if feature file doesn't exist, calculate it
+            print("Feature file does not exist")
+            file.data = file.load_data_file()
+            file.data_stats = file.extract_features()
+            file.export_features()               #save newly extracted features
+            file.remove_data()          #remove raw data now features have been extracted
+
     file.plot_all_features(1)
-    plt.show()
+
+    plt.show(block=False)
+    input("Press enter to finish")          #pause at end so figures can be seen
