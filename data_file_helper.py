@@ -12,6 +12,7 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 
+
 ALL_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "PlateHFAccZ", "SpindleAccX", "SpindleAccY", "SpindleAccZ", "Power"]
 MACH_CHANNEL_KEYS = ["PlateLFAccX", "PlateLFAccY", "PlateLFAccZ", "SpindleLoad", "SpindleX", "SpindleY", "SpindleZ", "Power"]
 ALL_PLOT_KEYS = ["SpindleAccX_p2p", "SpindleAccY_kurtosis", "SpindleAccX_mean"]
@@ -166,7 +167,7 @@ class FileHelper():
 
     def plot_channel_feature(self, figure_num, rows, cols, idx, channel_name, feature_name):
         """
-        Plot a specific feature in a channel for visualisation.
+        Plot a specific feature in a specific channel for visualisation.
         """
         data = self.data_stats[channel_name][feature_name]
         N = len(data)
@@ -176,30 +177,29 @@ class FileHelper():
         plt.plot(data)
         plt.xlabel('Run')
         plt.ylabel(feature_name)
-        #plt.title(channel_name)
         plt.grid('show')
 
 
     def plot_all_channel_features(self, figure_num, channel_name):
         """
-        Plot a all features in a specific channel for visualisation.
+        Plot all features in a specific channel for visualisation.
         """
         c = 1
         for feature in FEATURE_KEYS:
             self.plot_channel_feature(figure_num, 3, 4, c, channel_name, feature)
-            c +=1
+            c += 1
         plt.suptitle(channel_name)
         plt.tight_layout(w_pad=-1.0)
 
 
     def plot_all_features(self, start_figure_num):
         """
-        Plot all features in all channels for visualisation. (Memory intensive)
+        Plot all features in all channels for visualisation.
         """
         c = start_figure_num
         for channel_name in self.channel_keys:
             self.plot_all_channel_features(c, channel_name)
-            c +=1
+            c += 1
 
 
 
